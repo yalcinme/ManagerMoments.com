@@ -1,131 +1,182 @@
 "use client"
 
+import { motion } from "framer-motion"
+
 interface RetroIconProps {
   type: "ball" | "target" | "gloves" | "up-arrow" | "down-arrow" | "trophy" | "brain" | "league" | "boost" | "bench"
-  size?: "small" | "medium" | "large"
+  size?: "small" | "medium" | "large" | "xl"
   animated?: boolean
 }
 
-export default function RetroIcon({ type, size = "medium", animated = false }: RetroIconProps) {
+export default function RetroIcon({ type, size = "medium", animated = true }: RetroIconProps) {
   const sizeClasses = {
     small: "w-6 h-6",
     medium: "w-8 h-8",
     large: "w-12 h-12",
+    xl: "w-16 h-16",
   }
 
-  const animationClass = animated ? (type === "ball" ? "bounce-pixel" : "shake-pixel") : ""
-
   const getIcon = () => {
+    const baseClasses = `${sizeClasses[size]} pixel-perfect`
+
     switch (type) {
       case "ball":
         return (
-          <svg viewBox="0 0 32 32" className="w-full h-full pixel-perfect">
-            <rect x="0" y="0" width="32" height="32" fill="white" stroke="#000" strokeWidth="2" />
-            <rect x="4" y="4" width="24" height="24" fill="white" />
-            <rect x="8" y="8" width="16" height="16" fill="none" stroke="#000" strokeWidth="2" />
-            <rect x="12" y="12" width="8" height="8" fill="none" stroke="#000" strokeWidth="2" />
-            <rect x="14" y="6" width="4" height="20" fill="none" stroke="#000" strokeWidth="1" />
-            <rect x="6" y="14" width="20" height="4" fill="none" stroke="#000" strokeWidth="1" />
-          </svg>
+          <motion.div
+            animate={animated ? { rotate: 360 } : {}}
+            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+            className={`${baseClasses} bg-white rounded-full border-4 border-black relative`}
+            style={{
+              background: "radial-gradient(circle at 30% 30%, #ffffff, #e5e5e5)",
+              boxShadow: "inset -2px -2px 4px rgba(0,0,0,0.3), 0 0 10px rgba(255,255,255,0.5)",
+            }}
+          >
+            <div className="absolute inset-2 border-2 border-black rounded-full opacity-30"></div>
+          </motion.div>
         )
       case "target":
         return (
-          <svg viewBox="0 0 32 32" className="w-full h-full pixel-perfect">
-            <rect x="0" y="0" width="32" height="32" fill="white" stroke="#000" strokeWidth="2" />
-            <rect x="4" y="4" width="24" height="24" fill="white" />
-            <rect x="8" y="8" width="16" height="16" fill="none" stroke="#ef4444" strokeWidth="2" />
-            <rect x="12" y="12" width="8" height="8" fill="#ef4444" />
-            <rect x="14" y="14" width="4" height="4" fill="white" />
-          </svg>
-        )
-      case "gloves":
-        return (
-          <svg viewBox="0 0 32 32" className="w-full h-full pixel-perfect">
-            <rect x="0" y="0" width="32" height="32" fill="#22c55e" stroke="#000" strokeWidth="2" />
-            <rect x="4" y="8" width="8" height="20" fill="#16a34a" stroke="#000" strokeWidth="1" />
-            <rect x="20" y="8" width="8" height="20" fill="#16a34a" stroke="#000" strokeWidth="1" />
-            <rect x="12" y="12" width="8" height="16" fill="#16a34a" stroke="#000" strokeWidth="1" />
-            <rect x="6" y="4" width="4" height="8" fill="#16a34a" stroke="#000" strokeWidth="1" />
-            <rect x="22" y="4" width="4" height="8" fill="#16a34a" stroke="#000" strokeWidth="1" />
-          </svg>
-        )
-      case "up-arrow":
-        return (
-          <svg viewBox="0 0 32 32" className="w-full h-full pixel-perfect">
-            <rect x="0" y="0" width="32" height="32" fill="#22c55e" stroke="#000" strokeWidth="2" />
-            <rect x="14" y="4" width="4" height="24" fill="#16a34a" />
-            <rect x="10" y="8" width="12" height="4" fill="#16a34a" />
-            <rect x="12" y="6" width="8" height="4" fill="#16a34a" />
-          </svg>
-        )
-      case "down-arrow":
-        return (
-          <svg viewBox="0 0 32 32" className="w-full h-full pixel-perfect">
-            <rect x="0" y="0" width="32" height="32" fill="#ef4444" stroke="#000" strokeWidth="2" />
-            <rect x="14" y="4" width="4" height="24" fill="#dc2626" />
-            <rect x="10" y="20" width="12" height="4" fill="#dc2626" />
-            <rect x="12" y="22" width="8" height="4" fill="#dc2626" />
-          </svg>
+          <motion.div
+            animate={animated ? { scale: [1, 1.1, 1] } : {}}
+            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+            className={`${baseClasses} bg-red-500 rounded-full border-4 border-black relative`}
+            style={{
+              background: "radial-gradient(circle, #ef4444, #dc2626)",
+              boxShadow: "0 0 15px rgba(239, 68, 68, 0.6)",
+            }}
+          >
+            <div className="absolute inset-2 border-2 border-white rounded-full"></div>
+            <div className="absolute inset-4 bg-white rounded-full"></div>
+          </motion.div>
         )
       case "trophy":
         return (
-          <svg viewBox="0 0 32 32" className="w-full h-full pixel-perfect">
-            <rect x="0" y="0" width="32" height="32" fill="#facc15" stroke="#000" strokeWidth="2" />
-            <rect x="8" y="6" width="16" height="12" fill="#eab308" stroke="#000" strokeWidth="1" />
-            <rect x="4" y="10" width="4" height="4" fill="#eab308" stroke="#000" strokeWidth="1" />
-            <rect x="24" y="10" width="4" height="4" fill="#eab308" stroke="#000" strokeWidth="1" />
-            <rect x="12" y="18" width="8" height="4" fill="#eab308" stroke="#000" strokeWidth="1" />
-            <rect x="10" y="22" width="12" height="4" fill="#eab308" stroke="#000" strokeWidth="1" />
-            <rect x="14" y="26" width="4" height="4" fill="#eab308" stroke="#000" strokeWidth="1" />
-          </svg>
+          <motion.div
+            animate={animated ? { y: [-2, 2, -2] } : {}}
+            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+            className={`${baseClasses} relative`}
+          >
+            <div
+              className="w-full h-full bg-gradient-to-b from-yellow-300 to-yellow-600 border-4 border-black relative"
+              style={{
+                clipPath: "polygon(20% 0%, 80% 0%, 90% 70%, 70% 70%, 70% 100%, 30% 100%, 30% 70%, 10% 70%)",
+                boxShadow: "0 0 20px rgba(255, 215, 0, 0.8)",
+              }}
+            >
+              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-2 h-1 bg-red-500 rounded"></div>
+            </div>
+          </motion.div>
+        )
+      case "up-arrow":
+        return (
+          <motion.div
+            animate={animated ? { y: [-3, 0, -3] } : {}}
+            transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+            className={`${baseClasses} relative`}
+          >
+            <div
+              className="w-full h-full bg-gradient-to-t from-green-400 to-green-600 border-4 border-black"
+              style={{
+                clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
+                boxShadow: "0 0 15px rgba(34, 197, 94, 0.6)",
+              }}
+            ></div>
+          </motion.div>
+        )
+      case "down-arrow":
+        return (
+          <motion.div
+            animate={animated ? { y: [3, 0, 3] } : {}}
+            transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+            className={`${baseClasses} relative`}
+          >
+            <div
+              className="w-full h-full bg-gradient-to-b from-red-400 to-red-600 border-4 border-black"
+              style={{
+                clipPath: "polygon(50% 100%, 0% 0%, 100% 0%)",
+                boxShadow: "0 0 15px rgba(239, 68, 68, 0.6)",
+              }}
+            ></div>
+          </motion.div>
+        )
+      case "gloves":
+        return (
+          <motion.div
+            animate={animated ? { rotate: [0, 5, -5, 0] } : {}}
+            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+            className={`${baseClasses} bg-gradient-to-br from-orange-400 to-orange-600 border-4 border-black rounded relative`}
+            style={{
+              boxShadow: "0 0 15px rgba(251, 146, 60, 0.6)",
+            }}
+          >
+            <div className="absolute inset-2 bg-orange-300 rounded border border-black"></div>
+          </motion.div>
         )
       case "brain":
         return (
-          <svg viewBox="0 0 32 32" className="w-full h-full pixel-perfect">
-            <rect x="0" y="0" width="32" height="32" fill="#a855f7" stroke="#000" strokeWidth="2" />
-            <rect x="6" y="8" width="20" height="16" fill="#9333ea" stroke="#000" strokeWidth="1" />
-            <rect x="8" y="6" width="16" height="4" fill="#9333ea" stroke="#000" strokeWidth="1" />
-            <rect x="10" y="10" width="4" height="4" fill="#7c3aed" />
-            <rect x="18" y="10" width="4" height="4" fill="#7c3aed" />
-            <rect x="12" y="16" width="8" height="4" fill="#7c3aed" />
-          </svg>
+          <motion.div
+            animate={animated ? { scale: [1, 1.05, 1] } : {}}
+            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+            className={`${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 border-4 border-black rounded-full relative`}
+            style={{
+              boxShadow: "0 0 15px rgba(147, 51, 234, 0.6)",
+            }}
+          >
+            <div className="absolute inset-2 border border-white rounded-full opacity-50"></div>
+          </motion.div>
         )
       case "league":
         return (
-          <svg viewBox="0 0 32 32" className="w-full h-full pixel-perfect">
-            <rect x="0" y="0" width="32" height="32" fill="#0ea5e9" stroke="#000" strokeWidth="2" />
-            <rect x="4" y="8" width="8" height="8" fill="#0284c7" stroke="#000" strokeWidth="1" />
-            <rect x="20" y="8" width="8" height="8" fill="#0284c7" stroke="#000" strokeWidth="1" />
-            <rect x="6" y="6" width="4" height="4" fill="#0284c7" />
-            <rect x="22" y="6" width="4" height="4" fill="#0284c7" />
-            <rect x="8" y="18" width="16" height="8" fill="#0284c7" stroke="#000" strokeWidth="1" />
-          </svg>
+          <motion.div
+            animate={animated ? { rotate: [0, 10, -10, 0] } : {}}
+            transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
+            className={`${baseClasses} bg-gradient-to-br from-blue-400 to-blue-600 border-4 border-black rounded relative`}
+            style={{
+              boxShadow: "0 0 15px rgba(59, 130, 246, 0.6)",
+            }}
+          >
+            <div className="absolute inset-2 bg-blue-300 rounded border border-black"></div>
+          </motion.div>
         )
       case "boost":
         return (
-          <svg viewBox="0 0 32 32" className="w-full h-full pixel-perfect">
-            <rect x="0" y="0" width="32" height="32" fill="#f97316" stroke="#000" strokeWidth="2" />
-            <rect x="12" y="4" width="8" height="24" fill="#ea580c" stroke="#000" strokeWidth="1" />
-            <rect x="8" y="8" width="16" height="4" fill="#ea580c" />
-            <rect x="6" y="12" width="20" height="4" fill="#ea580c" />
-            <rect x="4" y="16" width="24" height="4" fill="#ea580c" />
-            <rect x="8" y="20" width="16" height="4" fill="#ea580c" />
-          </svg>
+          <motion.div
+            animate={animated ? { scale: [1, 1.2, 1] } : {}}
+            transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+            className={`${baseClasses} bg-gradient-to-br from-pink-400 to-pink-600 border-4 border-black rounded relative`}
+            style={{
+              boxShadow: "0 0 15px rgba(236, 72, 153, 0.6)",
+            }}
+          >
+            <div className="absolute inset-2 bg-pink-300 rounded border border-black"></div>
+          </motion.div>
         )
       case "bench":
         return (
-          <svg viewBox="0 0 32 32" className="w-full h-full pixel-perfect">
-            <rect x="0" y="0" width="32" height="32" fill="#a3a3a3" stroke="#000" strokeWidth="2" />
-            <rect x="4" y="16" width="24" height="8" fill="#737373" stroke="#000" strokeWidth="1" />
-            <rect x="6" y="24" width="4" height="6" fill="#737373" stroke="#000" strokeWidth="1" />
-            <rect x="22" y="24" width="4" height="6" fill="#737373" stroke="#000" strokeWidth="1" />
-            <rect x="8" y="12" width="16" height="4" fill="#737373" stroke="#000" strokeWidth="1" />
-          </svg>
+          <motion.div
+            animate={animated ? { y: [-1, 1, -1] } : {}}
+            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+            className={`${baseClasses} bg-gradient-to-br from-gray-400 to-gray-600 border-4 border-black rounded relative`}
+            style={{
+              boxShadow: "0 0 15px rgba(107, 114, 128, 0.6)",
+            }}
+          >
+            <div className="absolute inset-2 bg-gray-300 rounded border border-black"></div>
+          </motion.div>
         )
       default:
-        return <div className="w-full h-full bg-gray-400 border-2 border-black"></div>
+        return (
+          <motion.div
+            animate={animated ? { rotate: [0, 5, -5, 0] } : {}}
+            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+            className={`${baseClasses} bg-gradient-to-br from-blue-400 to-blue-600 border-4 border-black rounded`}
+            style={{
+              boxShadow: "0 0 15px rgba(59, 130, 246, 0.6)",
+            }}
+          ></motion.div>
+        )
     }
   }
 
-  return <div className={`${sizeClasses[size]} ${animationClass}`}>{getIcon()}</div>
+  return getIcon()
 }

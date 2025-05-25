@@ -1,10 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable CSS optimization that might be causing the critters error
-  experimental: {
-    optimizeCss: false,
-    cssChunking: false,
-  },
+  // Production optimizations
+  compress: true,
+  poweredByHeader: false,
 
   eslint: {
     ignoreDuringBuilds: true,
@@ -12,22 +10,72 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-
-  // Disable compression temporarily to avoid build issues
-  compress: false,
-
-  // Basic image optimization
+  
+  // Image optimization
   images: {
     unoptimized: true,
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
-  // Disable minification temporarily
-  swcMinify: false,
-  poweredByHeader: false,
+  // Headers for security and performance
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()'
+          }
+        ]
+      },
+      {
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300, stale-while-revalidate=600'
+          }
+        ]
+      }
+    ]
+  },
 
-  // Disable static optimization for error pages
-  async rewrites() {
-    return []
+  // Experimental features for performance
+  experimental: {
+    serverComponentsExternalPackages: [],
+    optimizePackageImports: ['framer-motion', 'lucide-react'],
+  },
+
+  // Webpack optimizations
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+        },
+      }
+    }
+    return config
   },
 }
 

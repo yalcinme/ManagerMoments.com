@@ -1,11 +1,10 @@
 "use client"
 
-import { useAudio as useAudioFromManager } from "@/components/audio-manager"
 import { useState, useEffect } from "react"
 
 export function useAudio() {
   const [audioContext, setAudioContext] = useState<{
-    playSound: () => void
+    playSound: (soundName: string) => void
     isMuted: boolean
     toggleMute: () => void
   }>({
@@ -16,10 +15,14 @@ export function useAudio() {
 
   useEffect(() => {
     try {
-      setAudioContext(useAudioFromManager())
+      // Try to get audio context from AudioManagerEnhanced
+      const audioManager = (window as any).__audioManager
+      if (audioManager) {
+        setAudioContext(audioManager)
+      }
     } catch (error) {
       // Fallback if not within AudioManager
-      // Keep the default state
+      console.log("Audio manager not available, using fallback")
     }
   }, [])
 

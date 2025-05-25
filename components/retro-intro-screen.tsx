@@ -1,237 +1,267 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ChevronDown, ChevronUp, AlertCircle } from "lucide-react"
-import RetroAvatar from "./retro-avatar"
-import { useAudio } from "./audio-manager-enhanced"
+import { Play, HelpCircle, Trophy, Target, Users, X } from "lucide-react"
 
 interface RetroIntroScreenProps {
   onStart: (managerId: string) => void
-  error: string | null
+  error?: string | null
 }
 
 export default function RetroIntroScreen({ onStart, error }: RetroIntroScreenProps) {
   const [managerId, setManagerId] = useState("")
-  const [showCursor, setShowCursor] = useState(true)
   const [showHelp, setShowHelp] = useState(false)
-  const { playSound, playMusic } = useAudio()
-
-  useEffect(() => {
-    // Start menu music when component mounts
-    playMusic("menu", true)
-
-    const interval = setInterval(() => {
-      setShowCursor((prev) => !prev)
-    }, 600)
-    return () => clearInterval(interval)
-  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (managerId.trim()) {
-      playSound("powerup")
       onStart(managerId.trim())
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setManagerId(e.target.value)
-    if (e.target.value) {
-      playSound("click")
-    }
-  }
-
-  const toggleHelp = () => {
-    setShowHelp(!showHelp)
-    playSound("coin")
-  }
-
   const handleDemoClick = () => {
-    setManagerId("demo")
-    playSound("powerup")
     onStart("demo")
   }
 
   return (
-    <div className="h-screen w-screen relative flex flex-col items-center justify-center p-4 overflow-hidden">
-      {/* Stadium Background */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: "url('/images/stadium-background.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+    <div className="min-h-screen w-screen bg-gradient-to-br from-green-600 via-blue-600 to-purple-700 flex flex-col relative overflow-y-auto">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{
+              x: Math.random() * window.innerWidth,
+              y: window.innerHeight + 20,
+              opacity: 0.1,
+            }}
+            animate={{
+              y: -20,
+              opacity: [0.1, 0.3, 0.1],
+            }}
+            transition={{
+              duration: 10 + Math.random() * 5,
+              repeat: Number.POSITIVE_INFINITY,
+              delay: Math.random() * 10,
+            }}
+            className="absolute w-2 h-2 bg-white rounded-full"
+          />
+        ))}
       </div>
 
-      {/* Main Content Container */}
-      <div className="relative z-10 w-full max-w-sm flex flex-col items-center justify-center min-h-screen">
-        {/* Title */}
+      {/* Main Content Container - Made Scrollable */}
+      <div className="flex-1 flex flex-col items-center justify-start p-4 relative z-10 max-w-md mx-auto w-full">
+        {/* Header Section */}
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 1 }}
-          className="text-center mb-8"
+          transition={{ delay: 0.2, duration: 0.8 }}
+          className="text-center mb-8 mt-8"
         >
           <motion.div
             animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-            className="pixel-card p-4 mb-4 bg-white bg-opacity-95"
+            transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
+            className="mb-6"
           >
-            <h1 className="font-display text-lg text-contrast-dark tracking-wide mb-2">YOUR MANAGER</h1>
-            <h1 className="font-display text-lg text-contrast-dark tracking-wide mb-2">MOMENTS WRAPPED</h1>
-            <p className="font-body text-xs text-contrast-dark tracking-wide">2024/25 PREMIER LEAGUE SEASON</p>
+            <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4 drop-shadow-lg" />
           </motion.div>
+          <h1 className="font-display text-title text-white font-bold mb-2 drop-shadow-lg">FPL MANAGER MOMENTS 2024</h1>
+          <p className="font-body text-small text-gray-200 leading-relaxed drop-shadow-sm">
+            Relive Your Fantasy Premier League season with insights
+          </p>
         </motion.div>
 
-        {/* Character */}
+        {/* Features Preview */}
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.5, duration: 0.8, type: "spring" }}
-          className="flex justify-center mb-8"
-          onAnimationComplete={() => playSound("jump")}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="grid grid-cols-3 gap-4 mb-8 w-full"
         >
-          <RetroAvatar isMoving={false} kitColor="#ef4444" size="large" role="manager" />
+          <div className="pixel-card p-3 bg-white/10 backdrop-blur-sm text-center">
+            <Target className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
+            <div className="font-body text-micro text-black font-semibold">Performance</div>
+          </div>
+          <div className="pixel-card p-3 bg-white/10 backdrop-blur-sm text-center">
+            <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
+            <div className="font-body text-micro text-black font-semibold">Achievements</div>
+          </div>
+          <div className="pixel-card p-3 bg-white/10 backdrop-blur-sm text-center">
+            <Users className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
+            <div className="font-body text-micro text-black font-semibold">Insights</div>
+          </div>
         </motion.div>
 
         {/* Input Form */}
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
+          initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-          className="w-full"
+          transition={{ delay: 0.6, type: "spring" }}
+          className="w-full mb-6"
         >
-          <div className="pixel-card p-4 mb-4 bg-white bg-opacity-95">
-            <div className="text-center mb-4">
-              <h2 className="font-display text-xs text-contrast-dark tracking-wide mb-2">ENTER MANAGER ID</h2>
-            </div>
-
+          <div className="pixel-card p-6 bg-white/95 backdrop-blur-sm">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="relative">
+              <div>
+                <label htmlFor="managerId" className="block font-body text-small text-gray-800 font-semibold mb-2">
+                  Enter Your FPL Manager ID
+                </label>
                 <Input
+                  id="managerId"
                   type="text"
-                  placeholder="YOUR FPL ID"
                   value={managerId}
-                  onChange={handleInputChange}
-                  className="w-full p-3 font-body text-sm text-center border-2 border-black rounded-md bg-white placeholder-gray-500 tracking-wide"
+                  onChange={(e) => setManagerId(e.target.value)}
+                  placeholder="e.g. 123456"
+                  className="w-full pixel-input"
+                  required
                 />
-                {showCursor && managerId === "" && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 w-0.5 h-4 bg-black animate-pulse"></div>
-                )}
               </div>
 
               {error && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="pixel-card bg-red-100 border-red-500 text-red-700 p-3 text-center"
-                  onAnimationComplete={() => playSound("whistle")}
+                  className="pixel-card p-3 bg-red-100 border border-red-300"
                 >
-                  <div className="flex items-center justify-center mb-2">
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                    <span className="font-display text-xs tracking-wide">ERROR</span>
-                  </div>
-                  <div className="font-body text-xs tracking-wide leading-relaxed">{error}</div>
+                  <p className="font-body text-small text-red-700">{error}</p>
                 </motion.div>
               )}
 
               <Button
                 type="submit"
                 disabled={!managerId.trim()}
-                onMouseEnter={() => playSound("coin")}
-                className="pixel-button w-full p-3 font-display text-xs tracking-wide group flex items-center justify-center"
-                style={{ color: "black" }}
+                className="w-full cta-button bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 disabled:opacity-50"
               >
-                REVEAL MY MANAGER MOMENTS
+                <Play className="w-4 h-4 mr-2" />
+                REVEAL MY MOMENTS
               </Button>
             </form>
 
-            {/* Demo Button */}
-            <div className="mt-4">
+            <div className="mt-4 text-center">
+              <div className="font-body text-micro text-gray-600 mb-2">Don't have your ID?</div>
               <Button
                 onClick={handleDemoClick}
-                onMouseEnter={() => playSound("coin")}
-                className="pixel-button w-full p-2 font-display text-xs tracking-wide bg-blue-100 hover:bg-blue-200"
-                style={{ color: "black" }}
+                className="w-full cta-button-secondary bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2"
               >
                 TRY DEMO MODE
               </Button>
             </div>
           </div>
+        </motion.div>
 
-          {/* Help Accordion */}
-          <div className="text-center mb-4">
-            <Button
-              onClick={toggleHelp}
-              className="pixel-button p-2 font-display text-xs tracking-wide flex items-center justify-center w-full bg-white bg-opacity-95"
+        {/* Help Button - Replace the accordion */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="w-full mb-8"
+        >
+          <Button
+            onClick={() => setShowHelp(true)}
+            className="w-full pixel-button bg-white/20 hover:bg-white/30 text-white border border-white/30 p-3 flex items-center justify-center"
+          >
+            <HelpCircle className="w-4 h-4 mr-2" />
+            <span className="font-body text-small font-semibold">How to find your FPL Manager ID</span>
+          </Button>
+        </motion.div>
+
+        {/* Help Modal */}
+        <AnimatePresence>
+          {showHelp && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+              onClick={() => setShowHelp(false)}
             >
-              HOW TO FIND YOUR FPL ID
-              {showHelp ? <ChevronUp className="w-3 h-3 ml-2" /> : <ChevronDown className="w-3 h-3 ml-2" />}
-            </Button>
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="pixel-card p-6 max-w-md w-full bg-white"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="font-display text-body text-gray-900 font-bold">Find Your FPL Manager ID</h3>
+                  <Button
+                    onClick={() => setShowHelp(false)}
+                    className="pixel-button p-1 w-8 h-8 bg-gray-200 hover:bg-gray-300"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
 
-            <AnimatePresence>
-              {showHelp && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden"
-                >
-                  <div className="pixel-card p-3 mt-2 bg-blue-100 bg-opacity-95">
-                    <div className="font-body text-xs text-contrast-dark tracking-wide text-left space-y-2">
-                      <p>
-                        <strong>Method 1:</strong>
-                      </p>
-                      <p>1. Go to fantasy.premierleague.com</p>
-                      <p>2. Log into your account</p>
-                      <p>3. Click "Points" in the menu</p>
-                      <p>4. Look at the URL - your ID is the number after "/entry/"</p>
-                      <p className="text-blue-700 font-bold">Example: .../entry/123456/event/1 → ID is 123456</p>
-
-                      <p className="pt-2">
-                        <strong>Method 2:</strong>
-                      </p>
-                      <p>1. Go to your team page</p>
-                      <p>2. Click "View Gameweek History"</p>
-                      <p>3. The ID is in the URL</p>
-
-                      <p className="pt-2 text-green-700 font-bold">Can't find it? Try "demo" or "1" for a sample!</p>
+                <div className="space-y-3 font-body text-small text-gray-800 leading-relaxed">
+                  <div>
+                    <strong className="text-gray-900">Step 1:</strong> Go to{" "}
+                    <a
+                      href="https://fantasy.premierleague.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline hover:text-blue-800"
+                    >
+                      fantasy.premierleague.com
+                    </a>
+                  </div>
+                  <div>
+                    <strong className="text-gray-900">Step 2:</strong> Log into your FPL account
+                  </div>
+                  <div>
+                    <strong className="text-gray-900">Step 3:</strong> Go to "Points" or "Transfers" page
+                  </div>
+                  <div>
+                    <strong className="text-gray-900">Step 4:</strong> Look at the URL in your browser
+                  </div>
+                  <div>
+                    <strong className="text-gray-900">Step 5:</strong> Your Manager ID is the number after "/entry/"
+                  </div>
+                  <div className="pixel-card p-3 bg-gray-100 border border-gray-300 mt-3">
+                    <div className="font-body text-micro text-gray-700">
+                      <strong>Example:</strong>
+                      <br />
+                      URL: fantasy.premierleague.com/entry/
+                      <span className="bg-yellow-200 px-1 rounded">123456</span>
+                      /event/38
+                      <br />
+                      Your ID: <strong>123456</strong>
                     </div>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                  <div className="text-center mt-4">
+                    <div className="font-body text-micro text-gray-600">
+                      Still can't find it? Try our demo mode to see how the app works!
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Footer */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.0 }}
+          className="text-center pb-8"
+        >
+          <p className="font-body text-micro text-gray-300">
+            Made with ⚽ for FPL managers worldwide •{" "}
+            <a
+              href="https://github.com/yalcinme"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-300 hover:text-blue-200 underline"
+            >
+              GitHub
+            </a>
+          </p>
         </motion.div>
       </div>
-
-      {/* Footer - Fixed at bottom */}
-      <footer className="absolute bottom-0 left-0 right-0 z-20 text-center text-xs text-white bg-black bg-opacity-50 py-3 px-4">
-        <p>
-          📊 FPL Manager Moments · Open Source on{" "}
-          <a
-            href="https://github.com/yourrepo"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-yellow-300"
-          >
-            GitHub
-          </a>{" "}
-          · Not affiliated with Fantasy Premier League · For entertainment only ·{" "}
-          <a href="mailto:mehmet@sprintstacker.com" className="underline hover:text-yellow-300">
-            @Mehmet
-          </a>
-        </p>
-      </footer>
     </div>
   )
 }
