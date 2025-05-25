@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useCallback, useRef } from "react"
 import { AnimatePresence } from "framer-motion"
 import type { FPLData } from "@/types/fpl"
@@ -21,6 +20,7 @@ export default function RetroGameExperience({ data, onRestart }: RetroGameExperi
   const [isUserHolding, setIsUserHolding] = useState(false)
   const [autoPlay, setAutoPlay] = useState(true)
   const [showFinal, setShowFinal] = useState(false)
+  const [imagesLoaded, setImagesLoaded] = useState(false)
   const { playSound } = useAudio()
   const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -30,26 +30,78 @@ export default function RetroGameExperience({ data, onRestart }: RetroGameExperi
   const currentInsight = retroInsights[currentInsightIndex]
   const isLastInsight = currentInsightIndex === retroInsights.length - 1
 
+  // Simple analytics function
+  const trackEvent = useCallback((eventName: string, properties?: any) => {
+    try {
+      if (typeof window !== "undefined" && (window as any).gtag) {
+        ;(window as any).gtag("event", eventName, properties || {})
+      }
+    } catch (error) {
+      // Silent fail
+    }
+  }, [])
+
+  // Preload images for smooth experience
+  useEffect(() => {
+    const imageUrls = [
+      "/images/season-kickoff-new.png",
+      "/images/peak-performance-new.png",
+      "/images/captaincy-masterclass-new.png",
+      "/images/transfer-market-new.png",
+      "/images/consistency-check-new.png",
+      "/images/bench-management-new.png",
+      "/images/stadium-background.jpg",
+    ]
+
+    let loadedCount = 0
+    const totalImages = imageUrls.length
+
+    const handleImageLoad = () => {
+      loadedCount++
+      if (loadedCount === totalImages) {
+        setImagesLoaded(true)
+      }
+    }
+
+    imageUrls.forEach((url) => {
+      const img = new Image()
+      img.onload = handleImageLoad
+      img.onerror = handleImageLoad // Count errors as loaded to prevent hanging
+      img.src = url
+    })
+
+    // Fallback timeout
+    const timeout = setTimeout(() => {
+      setImagesLoaded(true)
+    }, 3000)
+
+    return () => clearTimeout(timeout)
+  }, [])
+
   const nextInsight = useCallback(() => {
     if (currentInsightIndex < retroInsights.length - 1) {
       setCurrentInsightIndex(currentInsightIndex + 1)
       playSound("transition")
+      trackEvent("insight_next", { insight_index: currentInsightIndex + 1 })
     } else {
       setShowFinal(true)
       playSound("celebration")
+      trackEvent("game_complete")
     }
-  }, [currentInsightIndex, playSound])
+  }, [currentInsightIndex, playSound, trackEvent])
 
   const prevInsight = useCallback(() => {
     if (currentInsightIndex > 0) {
       setCurrentInsightIndex(currentInsightIndex - 1)
       playSound("transition")
+      trackEvent("insight_prev", { insight_index: currentInsightIndex - 1 })
     }
-  }, [currentInsightIndex, playSound])
+  }, [currentInsightIndex, playSound, trackEvent])
 
   const handleHome = useCallback(() => {
+    trackEvent("game_restart")
     onRestart()
-  }, [onRestart])
+  }, [onRestart, trackEvent])
 
   // Get touch/click position
   const getEventPosition = (e: React.TouchEvent | React.MouseEvent | TouchEvent | MouseEvent) => {
@@ -80,9 +132,10 @@ export default function RetroGameExperience({ data, onRestart }: RetroGameExperi
       holdTimeoutRef.current = setTimeout(() => {
         setIsPaused(true)
         playSound("whistle")
+        trackEvent("game_pause")
       }, 300) // 300ms to distinguish between tap and hold
     },
-    [playSound],
+    [playSound, trackEvent],
   )
 
   const handlePressEnd = useCallback(() => {
@@ -100,6 +153,7 @@ export default function RetroGameExperience({ data, onRestart }: RetroGameExperi
     // If it was a hold, just resume
     if (wasHolding && isPaused) {
       setIsPaused(false)
+      trackEvent("game_resume")
       return
     }
 
@@ -117,6 +171,7 @@ export default function RetroGameExperience({ data, onRestart }: RetroGameExperi
         } else {
           setShowFinal(true)
           playSound("celebration")
+          trackEvent("game_complete")
         }
       } else {
         // Left side tap - go previous
@@ -129,10 +184,11 @@ export default function RetroGameExperience({ data, onRestart }: RetroGameExperi
     // Resume if we were paused by user hold
     if (isPaused) {
       setIsPaused(false)
+      trackEvent("game_resume")
     }
 
     pressPositionRef.current = null
-  }, [isPaused, currentInsightIndex, nextInsight, prevInsight, playSound])
+  }, [isPaused, currentInsightIndex, nextInsight, prevInsight, playSound, trackEvent])
 
   // Handle mouse/touch events
   useEffect(() => {
@@ -151,6 +207,7 @@ export default function RetroGameExperience({ data, onRestart }: RetroGameExperi
       }
       if (isPaused) {
         setIsPaused(false)
+        trackEvent("game_resume")
       }
       pressPositionRef.current = null
     }
@@ -170,6 +227,7 @@ export default function RetroGameExperience({ data, onRestart }: RetroGameExperi
       }
       if (isPaused) {
         setIsPaused(false)
+        trackEvent("game_resume")
       }
       pressPositionRef.current = null
     }
@@ -193,7 +251,7 @@ export default function RetroGameExperience({ data, onRestart }: RetroGameExperi
         clearTimeout(holdTimeoutRef.current)
       }
     }
-  }, [handlePressStart, handlePressEnd, isPaused])
+  }, [handlePressStart, handlePressEnd, isPaused, trackEvent])
 
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
@@ -203,37 +261,72 @@ export default function RetroGameExperience({ data, onRestart }: RetroGameExperi
         e.preventDefault()
         setIsPaused(!isPaused)
         playSound("whistle")
+        trackEvent(isPaused ? "game_resume" : "game_pause")
       }
     },
-    [nextInsight, prevInsight, isPaused, playSound],
+    [nextInsight, prevInsight, isPaused, playSound, trackEvent],
   )
 
   useEffect(() => {
-    if (isPaused || !autoPlay || showFinal || isUserHolding) return
+    if (isPaused || !autoPlay || showFinal || isUserHolding || !imagesLoaded) return
 
     const timer = setTimeout(() => {
       if (isLastInsight) {
         setShowFinal(true)
         playSound("celebration")
+        trackEvent("game_complete")
       } else {
         nextInsight()
       }
     }, 7000)
 
     return () => clearTimeout(timer)
-  }, [currentInsightIndex, isPaused, autoPlay, showFinal, isLastInsight, nextInsight, playSound, isUserHolding])
+  }, [
+    currentInsightIndex,
+    isPaused,
+    autoPlay,
+    showFinal,
+    isLastInsight,
+    nextInsight,
+    playSound,
+    isUserHolding,
+    imagesLoaded,
+    trackEvent,
+  ])
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyPress)
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [handleKeyPress])
 
+  // Track game start
+  useEffect(() => {
+    trackEvent("game_start", { manager_id: data.manager_id })
+  }, [data.manager_id, trackEvent])
+
   if (showFinal) {
     return <RetroFinalCard data={data} onRestart={onRestart} onBack={() => setShowFinal(false)} />
   }
 
+  // Loading state while images are loading
+  if (!imagesLoaded) {
+    return (
+      <div className="safe-screen-height safe-screen-width flex items-center justify-center bg-black">
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-bounce">⚽</div>
+          <div className="font-display text-title text-white mb-2">LOADING EXPERIENCE</div>
+          <div className="font-body text-small text-gray-300">Preparing your journey...</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div ref={containerRef} className="h-screen w-screen relative select-none" style={{ touchAction: "none" }}>
+    <div
+      ref={containerRef}
+      className="h-screen w-screen relative select-none gpu-accelerated"
+      style={{ touchAction: "none" }}
+    >
       {/* Pause indicator */}
       {isPaused && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg">

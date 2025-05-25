@@ -3,7 +3,10 @@ const nextConfig = {
   // Production optimizations
   compress: true,
   poweredByHeader: false,
+  reactStrictMode: true,
+  swcMinify: true,
 
+  // Build optimizations
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -11,15 +14,25 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // Image optimization
+  // Image optimization for production
   images: {
     unoptimized: true,
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 31536000, // 1 year
+    dangerouslyAllowSVG: false,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  // Headers for security and performance
+  // Performance optimizations
+  experimental: {
+    optimizePackageImports: ['framer-motion', 'lucide-react'],
+    serverComponentsExternalPackages: [],
+    gzipSize: true,
+  },
+
+  // Security headers
   async headers() {
     return [
       {
@@ -39,7 +52,15 @@ const nextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()'
+            value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=()'
+          },
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains'
           }
         ]
       },
@@ -48,22 +69,64 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=300, stale-while-revalidate=600'
+            value: 'public, max-age=300, stale-while-revalidate=600, stale-if-error=86400'
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization'
+          }
+        ]
+      },
+      {
+        source: '/images/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          }
+        ]
+      },
+      {
+        source: '/sounds/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
           }
         ]
       }
     ]
   },
 
-  // Experimental features for performance
-  experimental: {
-    serverComponentsExternalPackages: [],
-    optimizePackageImports: ['framer-motion', 'lucide-react'],
+  // Redirects for SEO
+  async redirects() {
+    return [
+      {
+        source: '/home',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/index',
+        destination: '/',
+        permanent: true,
+      }
+    ]
   },
 
-  // Webpack optimizations
+  // Webpack optimizations for production
   webpack: (config, { dev, isServer }) => {
+    // Production optimizations
     if (!dev && !isServer) {
+      // Bundle splitting
       config.optimization.splitChunks = {
         chunks: 'all',
         cacheGroups: {
@@ -71,12 +134,39 @@ const nextConfig = {
             test: /[\\/]node_modules[\\/]/,
             name: 'vendors',
             chunks: 'all',
+            priority: 10,
+          },
+          framerMotion: {
+            test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
+            name: 'framer-motion',
+            chunks: 'all',
+            priority: 20,
+          },
+          common: {
+            name: 'common',
+            minChunks: 2,
+            chunks: 'all',
+            priority: 5,
+            reuseExistingChunk: true,
           },
         },
       }
+
+      // Tree shaking optimizations
+      config.optimization.usedExports = true
+      config.optimization.sideEffects = false
     }
+
+    // Ignore source maps in production for smaller bundles
+    if (!dev) {
+      config.devtool = false
+    }
+
     return config
   },
+
+  // Output configuration for deployment
+  output: 'standalone',
 }
 
 export default nextConfig

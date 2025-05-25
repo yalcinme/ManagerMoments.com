@@ -145,7 +145,7 @@ export default function RetroInsightCard({
   const cardGradient = getCardGradient(insight.id)
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center p-responsive-sm relative overflow-hidden">
+    <div className="safe-screen-height safe-screen-width flex items-center justify-center p-responsive-sm relative overflow-hidden">
       {/* Enhanced Background with Parallax Effect */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transform scale-105"
@@ -160,9 +160,9 @@ export default function RetroInsightCard({
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/60"></div>
       </div>
 
-      {/* Floating Pixel Particles */}
+      {/* Floating Pixel Particles - Reduced for performance in in-app browsers */}
       <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: 12 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <motion.div
             key={i}
             initial={{
@@ -209,7 +209,7 @@ export default function RetroInsightCard({
                 <Button
                   onClick={closeBadgeModal}
                   className="pixel-button p-1"
-                  style={{ width: "clamp(24px, 6vw, 32px)", height: "clamp(24px, 6vw, 32px)" }}
+                  style={{ width: "clamp(20px, 5vw + 0.2rem, 28px)", height: "clamp(20px, 5vw + 0.2rem, 28px)" }}
                 >
                   <X className="icon-responsive-sm" />
                 </Button>
@@ -222,8 +222,8 @@ export default function RetroInsightCard({
         )}
       </AnimatePresence>
 
-      {/* Main Content - Responsive Design */}
-      <div className="w-full container-responsive-md h-full flex flex-col relative z-10 py-4">
+      {/* Main Content - Optimized for In-App Browsers */}
+      <div className="w-full container-responsive-md h-full flex flex-col relative z-10 py-2">
         {/* Floating Title with Glow Effect */}
         <motion.div
           initial={{ y: -30, opacity: 0 }}
@@ -249,14 +249,15 @@ export default function RetroInsightCard({
           </motion.div>
         </motion.div>
 
-        {/* Main Content Card - Responsive Layout */}
+        {/* Main Content Card - Optimized Layout */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0, rotateX: -15 }}
           animate={{ scale: 1, opacity: 1, rotateX: 0 }}
           transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
-          className={`flex-1 pixel-card p-responsive-lg flex flex-col bg-gradient-to-br ${cardGradient} text-white relative overflow-hidden`}
+          className={`flex-1 pixel-card p-responsive-md flex flex-col bg-gradient-to-br ${cardGradient} text-white relative overflow-hidden`}
           style={{
             boxShadow: "0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)",
+            minHeight: "clamp(300px, 60vh, 500px)",
           }}
         >
           {/* Decorative Corner Elements */}
@@ -266,7 +267,7 @@ export default function RetroInsightCard({
           <div className="absolute bottom-2 right-2 w-3 h-3 border-r-2 border-b-2 border-white/30"></div>
 
           {/* Icon Section - Centered and Prominent */}
-          <div className="flex items-center justify-center m-responsive-md relative">
+          <div className="flex items-center justify-center m-responsive-sm relative">
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
@@ -282,9 +283,9 @@ export default function RetroInsightCard({
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="text-center m-responsive-md relative"
+            className="text-center m-responsive-sm relative"
           >
-            <div className="pixel-card p-responsive-lg bg-white/95 backdrop-blur-sm border-2 border-white/20 relative overflow-hidden">
+            <div className="pixel-card p-responsive-md bg-white/95 backdrop-blur-sm border-2 border-white/20 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-50 to-transparent"></div>
               <motion.div
                 initial={{ scale: 0 }}
@@ -306,16 +307,16 @@ export default function RetroInsightCard({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2 }}
-              className="m-responsive-md"
+              className="m-responsive-sm"
             >
-              <div className="text-center m-responsive-sm">
+              <div className="text-center m-responsive-xs">
                 <div className="font-display text-body text-gray-900 font-bold bg-white/90 p-responsive-sm rounded pixel-card">
                   BADGES EARNED
                 </div>
               </div>
               <div
                 className="grid grid-cols-2 space-responsive-sm overflow-y-auto"
-                style={{ maxHeight: "clamp(120px, 30vw, 180px)" }}
+                style={{ maxHeight: "clamp(100px, 25vh, 160px)" }}
               >
                 {data.badges.map((badge, index) => (
                   <motion.div
@@ -343,7 +344,7 @@ export default function RetroInsightCard({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2 }}
-                className="grid grid-cols-2 space-responsive-sm m-responsive-md"
+                className="grid grid-cols-2 space-responsive-sm m-responsive-sm"
               >
                 {insightData.secondaryStats.map((stat, index) => (
                   <motion.div
@@ -368,13 +369,13 @@ export default function RetroInsightCard({
 
           {/* Content Text - Enhanced Typography with More Space */}
           <div className="flex-1 flex flex-col justify-center text-center relative">
-            <div className="pixel-card p-responsive-md bg-white/90 backdrop-blur-sm border border-white/20 relative overflow-hidden">
+            <div className="pixel-card p-responsive-sm bg-white/90 backdrop-blur-sm border border-white/20 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white/50"></div>
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.6 }}
-                className="font-body text-content-subtitle text-gray-800 leading-relaxed m-responsive-sm px-2 font-semibold relative z-10"
+                className="font-body text-content-subtitle text-gray-800 leading-relaxed m-responsive-xs px-2 font-semibold relative z-10"
               >
                 {insightData.subtitle}
               </motion.p>
@@ -382,7 +383,7 @@ export default function RetroInsightCard({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.8 }}
-                className="pixel-card p-responsive-sm bg-yellow-50 border border-yellow-300 relative overflow-hidden"
+                className="pixel-card p-responsive-xs bg-yellow-50 border border-yellow-300 relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-yellow-400 to-orange-500"></div>
                 <p className="font-body text-content-funfact text-gray-800 leading-relaxed px-2 font-semibold">

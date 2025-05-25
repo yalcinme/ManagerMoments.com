@@ -1,179 +1,201 @@
 "use client"
 
-import { useState, Suspense, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import dynamic from "next/dynamic"
+import { Button } from "@/components/ui/button"
+import { Home, Loader2 } from "lucide-react"
 import RetroIntroScreen from "@/components/retro-intro-screen"
-import RetroLoadingScreen from "@/components/retro-loading-screen"
-import ErrorBoundary from "@/components/error-boundary"
-import { setupGlobalErrorHandling, ProductionMonitor } from "@/lib/monitoring"
+import RetroGameExperience from "@/components/retro-game-experience"
 import type { FPLData } from "@/types/fpl"
 
-// Lazy load components with proper error handling
-const AudioManagerEnhanced = dynamic(() => import("@/components/audio-manager-enhanced"), {
-  loading: () => <div>Loading audio...</div>,
-  ssr: false,
-})
+type GameState = "intro" | "loading" | "game" | "error"
 
-const AudioFallback = dynamic(() => import("@/components/audio-fallback"), {
-  loading: () => <div>Loading...</div>,
-  ssr: false,
-})
-
-const RetroGameExperience = dynamic(() => import("@/components/retro-game-experience"), {
-  loading: () => <RetroLoadingScreen />,
-  ssr: false,
-})
-
-export default function Home() {
-  const [gameState, setGameState] = useState<"intro" | "loading" | "playing">("intro")
-  const [fplData, setFPLData] = useState<FPLData | null>(null)
+export default function HomePage() {
+  const [gameState, setGameState] = useState<GameState>("intro")
+  const [fplData, setFplData] = useState<FPLData | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [audioError, setAudioError] = useState(false)
-  const [retryCount, setRetryCount] = useState(0)
 
-  // Initialize monitoring
+  // Simple analytics function
+  const trackEvent = useCallback((eventName: string, properties?: any) => {
+    try {
+      if (typeof window !== "undefined" && (window as any).gtag) {
+        ;(window as any).gtag("event", eventName, properties || {})
+      }
+    } catch (error) {
+      // Silent fail
+    }
+  }, [])
+
+  // Preload critical images
   useEffect(() => {
-    setupGlobalErrorHandling()
-    const monitor = ProductionMonitor.getInstance()
-    monitor.trackUserAction("app_loaded")
+    const preloadImages = [
+      "/images/season-kickoff-new.png",
+      "/images/peak-performance-new.png",
+      "/images/captaincy-masterclass-new.png",
+      "/images/transfer-market-new.png",
+      "/images/consistency-check-new.png",
+      "/images/bench-management-new.png",
+      "/images/stadium-background.jpg",
+    ]
+
+    preloadImages.forEach((src) => {
+      const img = new Image()
+      img.src = src
+    })
   }, [])
 
   const handleStartGame = async (managerId: string) => {
-    const monitor = ProductionMonitor.getInstance()
-    setGameState("loading")
     setError(null)
-    setRetryCount(0)
+    setGameState("loading")
+
+    trackEvent("manager_id_submit", {
+      event_category: "user_input",
+      event_label: "manager_id_entered",
+      value: Number.parseInt(managerId) || 0,
+    })
 
     try {
-      monitor.trackUserAction("game_start_attempted", { managerId })
-
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 45000) // Increased timeout
-
-      const response = await fetch(`/api/fpl-data/${encodeURIComponent(managerId)}`, {
-        signal: controller.signal,
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      })
-
-      clearTimeout(timeoutId)
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: "Unknown error occurred" }))
-        throw new Error(errorData.error || `HTTP ${response.status}`)
-      }
-
+      const response = await fetch(`/api/fpl-data/${managerId}`)
       const data = await response.json()
 
-      // Enhanced data validation
-      if (!data || typeof data !== "object" || !data.managerName) {
-        throw new Error("Invalid response data received")
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch FPL data")
       }
 
-      // Additional validation
-      if (typeof data.totalPoints !== "number" || data.totalPoints < 0) {
-        throw new Error("Invalid points data received")
-      }
+      setFplData(data)
+      setGameState("game")
 
-      setFPLData(data)
-      setGameState("playing")
-      monitor.trackUserAction("game_start_success", { managerId })
+      trackEvent("game_start", {
+        event_category: "game_flow",
+        event_label: "fpl_data_loaded",
+        manager_id: managerId,
+        total_points: data.totalPoints,
+        overall_rank: data.overallRank,
+      })
     } catch (err) {
       console.error("Error fetching FPL data:", err)
-      monitor.trackError(err instanceof Error ? err : String(err), { managerId, retryCount })
+      setError(err instanceof Error ? err.message : "An error occurred")
+      setGameState("error")
 
-      let errorMessage = "An unexpected error occurred. Please try again."
-
-      if (err instanceof Error) {
-        if (err.name === "AbortError") {
-          errorMessage = "Request timed out. Please try again or use demo mode."
-        } else if (err.message.includes("Failed to fetch")) {
-          errorMessage = "Network error. Please check your connection and try again."
-        } else if (err.message.includes("Manager not found")) {
-          errorMessage = "Manager not found. Please check your Manager ID or try demo mode."
-        } else if (err.message.includes("Too many requests")) {
-          errorMessage = "Too many requests. Please wait a moment before trying again."
-        } else {
-          errorMessage = err.message
-        }
-      }
-
-      setError(errorMessage)
-      setGameState("intro")
-      setRetryCount((prev) => prev + 1)
+      trackEvent("error", {
+        event_category: "error",
+        event_label: "fpl_data_fetch_failed",
+        error_message: err instanceof Error ? err.message : "Unknown error",
+        manager_id: managerId,
+      })
     }
   }
 
   const handleRestart = () => {
-    const monitor = ProductionMonitor.getInstance()
-    monitor.trackUserAction("game_restart")
-
     setGameState("intro")
-    setFPLData(null)
+    setFplData(null)
     setError(null)
-    setRetryCount(0)
+
+    trackEvent("game_restart", {
+      event_category: "game_flow",
+      event_label: "user_restarted_experience",
+    })
   }
 
-  // Audio Manager with fallback
-  const AudioManager = audioError ? AudioFallback : AudioManagerEnhanced
+  if (gameState === "intro") {
+    return <RetroIntroScreen onStart={handleStartGame} error={error} />
+  }
+
+  if (gameState === "game" && fplData) {
+    return <RetroGameExperience data={fplData} onRestart={handleRestart} />
+  }
 
   return (
-    <ErrorBoundary>
-      <ErrorBoundary
-        onError={(error) => {
-          console.log("Audio manager failed, using fallback")
-          const monitor = ProductionMonitor.getInstance()
-          monitor.trackError("Audio manager failed", { error: error.message })
-          setAudioError(true)
+    <div className="safe-screen-height safe-screen-width relative overflow-hidden">
+      {/* Background */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat gpu-accelerated"
+        style={{
+          backgroundImage: "url('/images/stadium-background.jpg')",
+          filter: "brightness(0.7)",
         }}
-      >
-        <AudioManager>
-          <div className="h-screen w-screen overflow-hidden">
-            <AnimatePresence mode="wait">
-              {gameState === "intro" && (
-                <motion.div
-                  key="intro"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <RetroIntroScreen onStart={handleStartGame} error={error} />
-                </motion.div>
-              )}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80" />
 
-              {gameState === "loading" && (
-                <motion.div
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <RetroLoadingScreen />
-                </motion.div>
-              )}
+      {/* Content */}
+      <div className="relative z-10 h-full flex flex-col items-center justify-center p-responsive-md">
+        <div className="w-full container-responsive-md">
+          <AnimatePresence mode="wait">
+            {gameState === "loading" && (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.3 }}
+                className="pixel-card p-responsive-lg bg-white text-center gpu-accelerated"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-orange-500"></div>
 
-              {gameState === "playing" && fplData && (
                 <motion.div
-                  key="playing"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                  className="text-4xl mb-4"
                 >
-                  <Suspense fallback={<RetroLoadingScreen />}>
-                    <RetroGameExperience data={fplData} onRestart={handleRestart} />
-                  </Suspense>
+                  ⚽
                 </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </AudioManager>
-      </ErrorBoundary>
-    </ErrorBoundary>
+                <h2 className="font-display text-title text-high-contrast-dark mb-2">LOADING YOUR SEASON</h2>
+                <p className="font-body text-small text-gray-700 mb-4">Analyzing your FPL journey...</p>
+                <div className="flex items-center justify-center space-responsive-xs">
+                  <Loader2 className="icon-responsive-md animate-spin" />
+                  <span className="font-body text-small text-gray-600">Please wait</span>
+                </div>
+              </motion.div>
+            )}
+
+            {gameState === "error" && (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="pixel-card p-responsive-lg bg-white text-center gpu-accelerated"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+
+                <div className="text-4xl mb-4">❌</div>
+                <h2 className="font-display text-title text-high-contrast-dark mb-2">OOPS!</h2>
+                <p className="font-body text-small text-gray-700 mb-4">{error}</p>
+                <div className="space-responsive-sm">
+                  <Button
+                    onClick={handleRestart}
+                    className="cta-button w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-2 border-black font-bold gpu-accelerated"
+                  >
+                    <span className="text-button font-bold">TRY AGAIN</span>
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Fixed Home Button */}
+        {gameState !== "intro" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50"
+          >
+            <Button
+              onClick={handleRestart}
+              className="pixel-button p-3 bg-white bg-opacity-90 hover:bg-opacity-100 border-2 border-black shadow-lg gpu-accelerated"
+              style={{
+                width: "clamp(44px, 10vw + 0.5rem, 60px)",
+                height: "clamp(44px, 10vw + 0.5rem, 60px)",
+              }}
+            >
+              <Home className="icon-responsive-md" />
+            </Button>
+          </motion.div>
+        )}
+      </div>
+    </div>
   )
 }

@@ -165,7 +165,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
   }
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden">
+    <div className="safe-screen-height safe-screen-width relative overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
@@ -191,7 +191,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
         <Button
           onClick={handleMuteToggle}
           className="pixel-button p-2 bg-white bg-opacity-90 hover:bg-opacity-100"
-          style={{ width: "clamp(32px, 8vw, 48px)", height: "clamp(32px, 8vw, 48px)" }}
+          style={{ width: "clamp(28px, 6vw + 0.3rem, 44px)", height: "clamp(28px, 6vw + 0.3rem, 44px)" }}
         >
           {audioMuted ? <VolumeX className="icon-responsive-sm" /> : <Volume2 className="icon-responsive-sm" />}
         </Button>
@@ -205,7 +205,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
 
       {showConfetti && (
         <div className="absolute inset-0 pointer-events-none">
-          {Array.from({ length: 50 }).map((_, i) => (
+          {Array.from({ length: 30 }).map((_, i) => (
             <motion.div
               key={i}
               initial={{
@@ -253,7 +253,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
                 <Button
                   onClick={closeAchievementModal}
                   className="pixel-button p-1"
-                  style={{ width: "clamp(24px, 6vw, 32px)", height: "clamp(24px, 6vw, 32px)" }}
+                  style={{ width: "clamp(20px, 5vw + 0.2rem, 28px)", height: "clamp(20px, 5vw + 0.2rem, 28px)" }}
                 >
                   <X className="icon-responsive-sm" />
                 </Button>
@@ -280,7 +280,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               className="pixel-card p-responsive-lg container-responsive-sm bg-white overflow-y-auto"
-              style={{ maxHeight: "80vh" }}
+              style={{ maxHeight: "clamp(300px, 70vh, 500px)" }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-start mb-4">
@@ -291,7 +291,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
                 <Button
                   onClick={closeAllBadgesModal}
                   className="pixel-button p-1"
-                  style={{ width: "clamp(24px, 6vw, 32px)", height: "clamp(24px, 6vw, 32px)" }}
+                  style={{ width: "clamp(20px, 5vw + 0.2rem, 28px)", height: "clamp(20px, 5vw + 0.2rem, 28px)" }}
                 >
                   <X className="icon-responsive-sm" />
                 </Button>
@@ -325,9 +325,9 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
         )}
       </AnimatePresence>
 
-      {/* Main Content - Fully Responsive */}
-      <div className="relative z-10 h-screen overflow-y-auto">
-        <div className="flex flex-col items-center justify-start min-h-screen p-responsive-sm space-responsive-sm py-4">
+      {/* Main Content - Optimized for In-App Browsers */}
+      <div className="relative z-10 h-full overflow-y-auto">
+        <div className="flex flex-col items-center justify-start min-h-full p-responsive-sm space-responsive-sm py-4">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -452,7 +452,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
           </motion.div>
 
           {/* Extra spacing for mobile scrolling */}
-          <div style={{ height: "clamp(16px, 4vw, 32px)" }}></div>
+          <div style={{ height: "clamp(12px, 3vw + 0.2rem, 24px)" }}></div>
         </div>
       </div>
     </div>
