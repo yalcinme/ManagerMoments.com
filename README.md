@@ -1,4 +1,4 @@
-# Super Mario FPL App
+# 90s Kid FPL Wrapped
 
 *Automatically synced with your [v0.dev](https://v0.dev) deployments*
 
