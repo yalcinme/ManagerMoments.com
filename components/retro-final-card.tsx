@@ -165,7 +165,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
   }
 
   return (
-    <div className="min-h-screen w-full relative">
+    <div className="min-h-screen w-full relative overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
@@ -190,14 +190,15 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
       <div className="absolute top-4 right-4 z-50">
         <Button
           onClick={handleMuteToggle}
-          className="pixel-button p-2 w-10 h-10 bg-white bg-opacity-90 hover:bg-opacity-100"
+          className="pixel-button p-2 bg-white bg-opacity-90 hover:bg-opacity-100"
+          style={{ width: "clamp(32px, 8vw, 48px)", height: "clamp(32px, 8vw, 48px)" }}
         >
-          {audioMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          {audioMuted ? <VolumeX className="icon-responsive-sm" /> : <Volume2 className="icon-responsive-sm" />}
         </Button>
       </div>
 
       {audioPlaying && !audioMuted && (
-        <div className="absolute top-4 left-4 z-50 bg-green-500 text-white px-2 py-1 rounded text-small">
+        <div className="absolute top-4 left-4 z-50 bg-green-500 text-white p-responsive-xs rounded text-small">
           🎵 Playing
         </div>
       )}
@@ -209,12 +210,12 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
               key={i}
               initial={{
                 y: -100,
-                x: Math.random() * window.innerWidth,
+                x: Math.random() * (typeof window !== "undefined" ? window.innerWidth : 800),
                 opacity: 1,
                 rotate: 0,
               }}
               animate={{
-                y: window.innerHeight + 100,
+                y: (typeof window !== "undefined" ? window.innerHeight : 600) + 100,
                 rotate: 360 * 3,
               }}
               transition={{
@@ -244,13 +245,17 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              className="pixel-card p-6 max-w-sm w-full bg-white"
+              className="pixel-card p-responsive-lg container-responsive-sm bg-white"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-display text-body text-contrast-dark">{selectedAchievement}</h3>
-                <Button onClick={closeAchievementModal} className="pixel-button p-1 w-8 h-8">
-                  <X className="w-4 h-4" />
+                <Button
+                  onClick={closeAchievementModal}
+                  className="pixel-button p-1"
+                  style={{ width: "clamp(24px, 6vw, 32px)", height: "clamp(24px, 6vw, 32px)" }}
+                >
+                  <X className="icon-responsive-sm" />
                 </Button>
               </div>
               <p className="font-body text-small text-contrast-dark leading-relaxed">
@@ -274,20 +279,25 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              className="pixel-card p-6 max-w-sm w-full bg-white max-h-[80vh] overflow-y-auto"
+              className="pixel-card p-responsive-lg container-responsive-sm bg-white overflow-y-auto"
+              style={{ maxHeight: "80vh" }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-2">
-                  <Award className="w-4 h-4 text-yellow-600" />
+                <div className="flex items-center space-responsive-xs">
+                  <Award className="icon-responsive-sm text-yellow-600" />
                   <h3 className="font-display text-body text-contrast-dark">ALL BADGES EARNED</h3>
                 </div>
-                <Button onClick={closeAllBadgesModal} className="pixel-button p-1 w-8 h-8">
-                  <X className="w-4 h-4" />
+                <Button
+                  onClick={closeAllBadgesModal}
+                  className="pixel-button p-1"
+                  style={{ width: "clamp(24px, 6vw, 32px)", height: "clamp(24px, 6vw, 32px)" }}
+                >
+                  <X className="icon-responsive-sm" />
                 </Button>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-responsive-sm">
                 {data.badges.map((badge, index) => (
                   <motion.div
                     key={badge}
@@ -295,7 +305,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
                     onClick={() => handleAchievementClick(badge)}
-                    className="pixel-card p-3 bg-orange-100 cursor-pointer hover:bg-orange-200 transition-colors"
+                    className="pixel-card p-responsive-sm bg-orange-100 cursor-pointer hover:bg-orange-200 transition-colors"
                   >
                     <div className="font-display text-body text-contrast-dark mb-1">{badge}</div>
                     <div className="font-body text-small text-contrast-dark leading-relaxed">
@@ -315,69 +325,84 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
         )}
       </AnimatePresence>
 
+      {/* Main Content - Fully Responsive */}
       <div className="relative z-10 h-screen overflow-y-auto">
-        <div className="flex flex-col items-center justify-start min-h-screen p-4 space-y-8 py-8">
+        <div className="flex flex-col items-center justify-start min-h-screen p-responsive-sm space-responsive-sm py-4">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8, type: "spring" }}
-            className="w-full max-w-sm"
+            className="w-full container-responsive-sm"
           >
-            <div className="pixel-card p-6 bg-gradient-to-b from-yellow-200 to-yellow-100 relative overflow-hidden">
-              <div className="text-center mb-4 relative z-10">
-                <div className="text-4xl mb-2">🏆</div>
-                <h1 className="font-display text-body text-contrast-dark mb-1">YOUR SEASON TITLE IS</h1>
+            <div className="pixel-card p-responsive-lg bg-gradient-to-b from-yellow-200 to-yellow-100 relative overflow-hidden">
+              <div className="text-center m-responsive-sm relative z-10">
+                <div className="text-2xl sm:text-4xl mb-2">🏆</div>
+                <h1 className="font-display text-small text-contrast-dark mb-1">YOUR SEASON TITLE IS</h1>
                 <div className="flex items-center justify-center mb-2">
                   <span className="text-red-500 mr-2">🔥</span>
-                  <div className="font-display text-body text-contrast-dark">{data.managerTitle}</div>
+                  <div className="font-display text-small text-contrast-dark text-center">{data.managerTitle}</div>
                 </div>
               </div>
 
-              <div className="text-center mb-4 relative z-10 space-y-2">
-                <div className="pixel-card p-3 bg-white">
-                  <div className="font-display text-body text-contrast-dark">{data.managerName}</div>
+              <div className="text-center m-responsive-sm relative z-10 space-responsive-xs">
+                <div className="pixel-card p-responsive-sm bg-white">
+                  <div className="font-display text-small text-contrast-dark">{data.managerName}</div>
                 </div>
-                <div className="pixel-card p-2 bg-white">
-                  <div className="font-display text-small text-contrast-dark">Team: {data.teamName}</div>
+                <div className="pixel-card p-responsive-xs bg-white">
+                  <div className="font-display text-micro text-contrast-dark">Team: {data.teamName}</div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mb-4 relative z-10">
-                <div className="pixel-card p-3 text-center bg-white">
+              <div className="grid grid-cols-2 space-responsive-sm m-responsive-sm relative z-10">
+                <div className="pixel-card p-responsive-sm text-center bg-white">
                   <div className="font-display text-micro text-contrast-dark">{data.totalPoints}</div>
-                  <div className="font-body text-micro text-contrast-dark">POINTS</div>
+                  <div className="font-body text-nano text-contrast-dark">POINTS</div>
                 </div>
-                <div className="pixel-card p-3 text-center bg-white">
+                <div className="pixel-card p-responsive-sm text-center bg-white">
                   <div className="font-display text-micro text-contrast-dark">{formatRank(data.overallRank)}</div>
-                  <div className="font-body text-micro text-contrast-dark">RANK</div>
+                  <div className="font-body text-nano text-contrast-dark">RANK</div>
                 </div>
-                <div className="pixel-card p-3 text-center bg-white">
+                <div className="pixel-card p-responsive-sm text-center bg-white">
                   <div className="font-display text-micro text-contrast-dark">{data.bestGw?.points}</div>
-                  <div className="font-body text-micro text-contrast-dark">BEST GW</div>
+                  <div className="font-body text-nano text-contrast-dark">BEST GW</div>
                 </div>
                 <div
-                  className="pixel-card p-3 text-center bg-white cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="pixel-card p-responsive-sm text-center bg-white cursor-pointer hover:bg-yellow-50 hover:scale-105 hover:shadow-lg transition-all duration-200 border-2 border-transparent hover:border-yellow-400 relative overflow-hidden"
                   onClick={handleShowAllBadges}
+                  style={{
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  }}
                 >
-                  <div className="font-display text-micro text-contrast-dark">{data.badges.length}</div>
-                  <div className="font-body text-micro text-contrast-dark">BADGES</div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/50 to-orange-50/50 opacity-0 hover:opacity-100 transition-opacity duration-200"></div>
+                  <div className="font-display text-micro text-contrast-dark relative z-10">{data.badges.length}</div>
+                  <div className="font-body text-nano text-contrast-dark relative z-10">BADGES</div>
+                  <div className="absolute bottom-1 right-1 text-yellow-500 opacity-0 hover:opacity-100 transition-opacity duration-200">
+                    <span className="text-xs">👆</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-2 mb-4 relative z-10">
+              <div className="space-responsive-xs m-responsive-sm relative z-10">
                 {data.badges.slice(0, 2).map((badge, index) => (
                   <div
                     key={badge}
                     onClick={() => handleAchievementClick(badge)}
-                    className="pixel-card p-3 text-center bg-white cursor-pointer hover:bg-gray-100 transition-colors"
+                    className="pixel-card p-responsive-sm text-center bg-white cursor-pointer hover:bg-yellow-50 hover:scale-105 hover:shadow-lg transition-all duration-200 border-2 border-transparent hover:border-yellow-400 relative overflow-hidden"
+                    style={{
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    }}
                   >
-                    <div className="font-display text-micro text-contrast-dark text-ellipsis">{badge}</div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/50 to-orange-50/50 opacity-0 hover:opacity-100 transition-opacity duration-200"></div>
+                    <div className="font-display text-nano text-contrast-dark text-ellipsis relative z-10">{badge}</div>
+                    <div className="absolute bottom-1 right-1 text-yellow-500 opacity-0 hover:opacity-100 transition-opacity duration-200">
+                      <span className="text-xs">👆</span>
+                    </div>
                   </div>
                 ))}
               </div>
 
               <div className="text-center relative z-10">
-                <div className="font-body text-micro text-contrast-dark">SHARE YOUR MOMENT</div>
+                <div className="font-body text-nano text-contrast-dark">SHARE YOUR MOMENT</div>
               </div>
             </div>
           </motion.div>
@@ -386,9 +411,9 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1, duration: 0.8 }}
-            className="w-full max-w-sm space-y-3"
+            className="w-full container-responsive-sm space-responsive-xs"
           >
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 space-responsive-xs">
               <Button
                 onClick={shareToWhatsApp}
                 className="cta-button-secondary text-white bg-green-500 hover:bg-green-600 border-2 border-green-700"
@@ -402,7 +427,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
                 <span className="text-button font-bold">INSTAGRAM</span>
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 space-responsive-xs">
               <Button
                 onClick={shareToFacebook}
                 className="cta-button-secondary text-white bg-blue-500 hover:bg-blue-600 border-2 border-blue-700"
@@ -416,7 +441,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
                 <span className="text-button font-bold">INVITE FRIENDS</span>
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 space-responsive-xs">
               <Button onClick={onBack} className="cta-button-secondary text-contrast-dark">
                 <span className="text-button font-bold">BACK</span>
               </Button>
@@ -426,7 +451,8 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
             </div>
           </motion.div>
 
-          <div className="h-16"></div>
+          {/* Extra spacing for mobile scrolling */}
+          <div style={{ height: "clamp(16px, 4vw, 32px)" }}></div>
         </div>
       </div>
     </div>

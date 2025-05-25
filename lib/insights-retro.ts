@@ -36,13 +36,10 @@ export const retroInsights: RetroInsight[] = [
     getData: (data) => ({
       mainStat: data.bestGw?.points.toString() || "0",
       mainLabel: `GAMEWEEK ${data.bestGw?.gameweek || 1}`,
-      subtitle: "Your highest scoring gameweek of the entire season! This was your moment of FPL glory.",
+      subtitle: `Your best gameweek was ${data.bestGw?.gameweek || 1}, you scored ${data.bestGw?.points || 0} points! This was your moment of FPL glory.`,
       secondaryStats: [
         { value: data.worstGw?.points.toString() || "0", label: "WORST GW" },
-        {
-          value: Math.round(((data.bestGw?.points || 0) / (data.worstGw?.points || 1)) * 10) / 10 + "x",
-          label: "RATIO",
-        },
+        { value: `GW${data.worstGw?.gameweek || 1}`, label: "LOWEST WEEK" },
       ],
       funFact: `Only ${Math.round(Math.random() * 15 + 5)}% of managers scored higher that week`,
     }),
