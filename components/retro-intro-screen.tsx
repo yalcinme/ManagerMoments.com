@@ -57,7 +57,7 @@ export default function RetroIntroScreen({ onStart, error }: RetroIntroScreenPro
   }
 
   return (
-    <div className="h-screen w-screen relative flex items-center justify-center p-4 overflow-hidden">
+    <div className="h-screen w-screen relative flex flex-col items-center justify-center p-4 overflow-hidden">
       {/* Stadium Background */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -71,13 +71,14 @@ export default function RetroIntroScreen({ onStart, error }: RetroIntroScreenPro
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-sm aspect-[3/5] flex flex-col">
+      {/* Main Content Container */}
+      <div className="relative z-10 w-full max-w-sm flex flex-col items-center justify-center min-h-screen">
         {/* Title */}
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 1 }}
-          className="flex-none text-center mb-8"
+          className="text-center mb-8"
         >
           <motion.div
             animate={{ scale: [1, 1.05, 1] }}
@@ -86,7 +87,7 @@ export default function RetroIntroScreen({ onStart, error }: RetroIntroScreenPro
           >
             <h1 className="font-display text-lg text-contrast-dark tracking-wide mb-2">YOUR MANAGER</h1>
             <h1 className="font-display text-lg text-contrast-dark tracking-wide mb-2">MOMENTS WRAPPED</h1>
-            <p className="font-body text-xs text-contrast-dark tracking-wide">2024/25 SEASON</p>
+            <p className="font-body text-xs text-contrast-dark tracking-wide">2024/25 PREMIER LEAGUE SEASON</p>
           </motion.div>
         </motion.div>
 
@@ -95,7 +96,7 @@ export default function RetroIntroScreen({ onStart, error }: RetroIntroScreenPro
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.5, duration: 0.8, type: "spring" }}
-          className="flex-none flex justify-center mb-8"
+          className="flex justify-center mb-8"
           onAnimationComplete={() => playSound("jump")}
         >
           <RetroAvatar isMoving={false} kitColor="#ef4444" size="large" role="manager" />
@@ -106,7 +107,7 @@ export default function RetroIntroScreen({ onStart, error }: RetroIntroScreenPro
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.6 }}
-          className="flex-1 flex flex-col"
+          className="w-full"
         >
           <div className="pixel-card p-4 mb-4 bg-white bg-opacity-95">
             <div className="text-center mb-4">
@@ -212,6 +213,25 @@ export default function RetroIntroScreen({ onStart, error }: RetroIntroScreenPro
           </div>
         </motion.div>
       </div>
+
+      {/* Footer - Fixed at bottom */}
+      <footer className="absolute bottom-0 left-0 right-0 z-20 text-center text-xs text-white bg-black bg-opacity-50 py-3 px-4">
+        <p>
+          📊 FPL Manager Moments · Open Source on{" "}
+          <a
+            href="https://github.com/yourrepo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-yellow-300"
+          >
+            GitHub
+          </a>{" "}
+          · Not affiliated with Fantasy Premier League · For entertainment only ·{" "}
+          <a href="mailto:mehmet@sprintstacker.com" className="underline hover:text-yellow-300">
+            @Mehmet
+          </a>
+        </p>
+      </footer>
     </div>
   )
 }
