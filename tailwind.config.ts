@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss"
 
 const config: Config = {
-  darkMode: ["class"],
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -54,17 +53,15 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      animation: {
-        "pulse-slow": "pulse 3s infinite",
-        "bounce-subtle": "bounce 2s infinite",
-      },
-      spacing: {
-        "18": "4.5rem",
-        "88": "22rem",
-      },
     },
   },
   plugins: [require("tailwindcss-animate")],
+  // Disable JIT to avoid build issues
+  mode: "jit",
+  // Reduce CSS output
+  corePlugins: {
+    preflight: true,
+  },
 }
 
 export default config

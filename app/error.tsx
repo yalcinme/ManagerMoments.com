@@ -1,9 +1,5 @@
 "use client"
 
-import { useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { AlertTriangle, RefreshCw } from "lucide-react"
-
 export default function Error({
   error,
   reset,
@@ -11,44 +7,45 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  useEffect(() => {
-    // Log error to monitoring service
-    console.error("Application error:", error)
-  }, [error])
-
   return (
-    <div className="h-screen w-screen gradient-red flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="pixel-card p-6 text-center bg-white">
-          <div className="mb-4">
-            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h1 className="font-display text-lg text-contrast-dark tracking-wide mb-2">OOPS! SOMETHING WENT WRONG</h1>
-            <p className="font-body text-sm text-contrast-dark leading-relaxed">
-              We encountered an unexpected error. Please try again.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <Button onClick={reset} className="pixel-button w-full py-3 font-display text-xs tracking-wide">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              TRY AGAIN
-            </Button>
-
-            <Button
-              onClick={() => (window.location.href = "/")}
-              className="pixel-button w-full py-3 font-display text-xs tracking-wide bg-gray-100"
-            >
-              GO HOME
-            </Button>
-          </div>
-
-          {process.env.NODE_ENV === "development" && (
-            <details className="mt-4 text-left">
-              <summary className="font-body text-xs text-gray-600 cursor-pointer">Error Details (Dev Mode)</summary>
-              <pre className="mt-2 text-xs text-gray-600 overflow-auto max-h-32">{error.message}</pre>
-            </details>
-          )}
-        </div>
+    <div
+      style={{
+        height: "100vh",
+        width: "100vw",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#dc2626",
+        color: "white",
+        fontFamily: "monospace",
+      }}
+    >
+      <div style={{ textAlign: "center", padding: "2rem" }}>
+        <h1 style={{ fontSize: "2rem", marginBottom: "1rem" }}>Something went wrong!</h1>
+        <p style={{ marginBottom: "2rem" }}>An error occurred.</p>
+        <button
+          onClick={reset}
+          style={{
+            backgroundColor: "white",
+            color: "#dc2626",
+            border: "none",
+            padding: "0.5rem 1rem",
+            borderRadius: "4px",
+            cursor: "pointer",
+            marginRight: "1rem",
+          }}
+        >
+          Try again
+        </button>
+        <a
+          href="/"
+          style={{
+            color: "#fca5a5",
+            textDecoration: "underline",
+          }}
+        >
+          Go Home
+        </a>
       </div>
     </div>
   )

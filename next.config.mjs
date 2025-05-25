@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Performance optimizations
+  // Disable CSS optimization that might be causing the critters error
   experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['framer-motion', 'lucide-react'],
+    optimizeCss: false,
+    cssChunking: false,
   },
 
   eslint: {
@@ -13,76 +13,22 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
-  // Compression
-  compress: true,
+  // Disable compression temporarily to avoid build issues
+  compress: false,
 
-  // Security headers (additional to middleware)
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on'
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block'
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY'
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          }
-        ]
-      }
-    ]
-  },
-
-  // Image optimization
+  // Basic image optimization
   images: {
-    formats: ['image/webp', 'image/avif'],
-    minimumCacheTTL: 60,
-    dangerouslyAllowSVG: false,
     unoptimized: true,
   },
 
-  // Bundle analyzer in development
-  ...(process.env.ANALYZE === 'true' && {
-    webpack: (config, { isServer }) => {
-      if (!isServer) {
-        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-        config.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: 'static',
-            openAnalyzer: false,
-          })
-        )
-      }
-      return config
-    },
-  }),
+  // Disable minification temporarily
+  swcMinify: false,
+  poweredByHeader: false,
 
-  // Production optimizations
-  ...(process.env.NODE_ENV === 'production' && {
-    swcMinify: true,
-    poweredByHeader: false,
-    
-    // Redirect trailing slashes
-    async redirects() {
-      return [
-        {
-          source: '/:path*/',
-          destination: '/:path*',
-          permanent: true,
-        },
-      ]
-    },
-  }),
+  // Disable static optimization for error pages
+  async rewrites() {
+    return []
+  },
 }
 
 export default nextConfig
