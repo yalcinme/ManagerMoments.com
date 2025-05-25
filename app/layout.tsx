@@ -206,6 +206,16 @@ export default function RootLayout({
         {/* Structured Data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
 
+        {/* Consent Management for Cookie Compliance and Google Ad Manager */}
+        <script
+          type="text/javascript"
+          data-cmp-ab="1"
+          src="https://cdn.consentmanager.net/delivery/autoblocking/91014785225c6.js"
+          data-cmp-host="a.delivery.consentmanager.net"
+          data-cmp-cdn="cdn.consentmanager.net"
+          data-cmp-codesrc="16"
+        />
+
         {/* Preload critical resources */}
         <link rel="preload" href="/images/stadium-background.jpg" as="image" />
         <link rel="preload" href="/sounds/champions-league-8-bit.wav" as="audio" />
