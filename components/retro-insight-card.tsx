@@ -34,6 +34,25 @@ const badgeExplanations: { [key: string]: string } = {
   "ELITE TIER": "Finished in the top 10,000 managers - you're among the very best!",
 }
 
+// Background image mapping
+const getBackgroundImage = (insightId: string): string => {
+  const imageMap: { [key: string]: string } = {
+    "season-kickoff": "/images/season-kickoff.png",
+    "peak-performance": "/images/peak-performance.jpeg",
+    "captaincy-masterclass": "/images/captaincy-masterclass.jpeg",
+    "transfer-market": "/images/transfer-market.jpeg",
+    "consistency-check": "/images/consistency-check.jpeg",
+    "bench-management": "/images/bench-management.png",
+    "chip-effectiveness": "/images/chip-effectiveness.png",
+    "season-recap": "/images/season-recap.png",
+    "you-vs-the-game": "/images/you-vs-the-game.png",
+    "mini-league-rivalry": "/images/mini-league-rivalry.png",
+    "most-trusted-player": "/images/peak-performance.jpeg", // Reuse peak performance
+  }
+
+  return imageMap[insightId] || "/images/season-kickoff.png"
+}
+
 export default function RetroInsightCard({
   insight,
   data,
@@ -47,7 +66,7 @@ export default function RetroInsightCard({
   let insightData = insight.getData(data)
 
   // Add arrow explanations
-  if (insight.id === "arrow-up-down") {
+  if (insight.id === "you-vs-the-game") {
     insightData = {
       ...insightData,
       funFact: "Green arrows mean your rank improved, red arrows mean your rank dropped.",
@@ -94,13 +113,27 @@ export default function RetroInsightCard({
     setSelectedBadge(null)
   }
 
-  const gradientClass = `gradient-${insight.gradient}`
-
   // Check if this is the season recap card
   const isSeasonRecap = insight.id === "season-recap"
 
+  // Get background image for this insight
+  const backgroundImage = getBackgroundImage(insight.id)
+
   return (
-    <div className={`h-screen w-screen ${gradientClass} flex items-center justify-center p-4`}>
+    <div className="h-screen w-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Dynamic Background Image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('${backgroundImage}')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+      </div>
+
       {/* Badge Modal */}
       <AnimatePresence>
         {selectedBadge && (
@@ -132,7 +165,7 @@ export default function RetroInsightCard({
         )}
       </AnimatePresence>
 
-      <div className="w-full max-w-sm aspect-[3/5] flex flex-col">
+      <div className="w-full max-w-sm aspect-[3/5] flex flex-col relative z-10">
         {/* Header */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
@@ -143,7 +176,7 @@ export default function RetroInsightCard({
           <motion.div
             animate={{ scale: [1, 1.02, 1] }}
             transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
-            className="pixel-card p-3 text-center"
+            className="pixel-card p-3 text-center bg-white bg-opacity-95"
           >
             <h1 className="font-display text-xs text-contrast-dark tracking-wide">{insight.title}</h1>
           </motion.div>
@@ -154,7 +187,7 @@ export default function RetroInsightCard({
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.4, type: "spring" }}
-          className="flex-1 pixel-card p-6 flex flex-col"
+          className="flex-1 pixel-card p-6 flex flex-col bg-white bg-opacity-95"
         >
           {/* Character and Icon */}
           <div className="flex items-center justify-center gap-4 mb-6">
@@ -225,7 +258,7 @@ export default function RetroInsightCard({
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.9 + index * 0.1 }}
-                    className="pixel-card p-2 text-center"
+                    className="pixel-card p-2 text-center bg-white bg-opacity-90"
                   >
                     <div className="font-display text-sm text-contrast-dark tracking-wide truncate px-1">
                       {stat.value}
@@ -270,7 +303,7 @@ export default function RetroInsightCard({
           <Button
             onClick={handlePrev}
             disabled={!canGoPrev}
-            className="pixel-button px-4 py-2 font-display text-xs tracking-wide disabled:opacity-50"
+            className="pixel-button px-4 py-2 font-display text-xs tracking-wide disabled:opacity-50 bg-white bg-opacity-95"
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
             BACK
@@ -279,7 +312,7 @@ export default function RetroInsightCard({
           <Button
             onClick={handleNext}
             disabled={!canGoNext && !canGoPrev}
-            className="pixel-button px-4 py-2 font-display text-xs tracking-wide"
+            className="pixel-button px-4 py-2 font-display text-xs tracking-wide bg-white bg-opacity-95"
           >
             {canGoNext ? "NEXT" : "END"}
             <ChevronRight className="w-4 h-4 ml-1" />

@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, RotateCcw, MessageCircle, Instagram, Facebook, X, Award, Share2 } from "lucide-react"
 import type { FPLData } from "@/types/fpl"
-import RetroAvatar from "./retro-avatar"
 import { useAudio } from "./audio-manager-enhanced"
 
 interface RetroFinalCardProps {
@@ -129,7 +128,19 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
   }
 
   return (
-    <div className="h-screen w-screen gradient-gold flex items-start justify-center p-4 relative overflow-hidden">
+    <div className="h-screen w-screen relative flex flex-col items-center justify-center p-4 overflow-hidden">
+      {/* Dynamic Background Image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('/images/final-share-card.jpeg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+      </div>
       {/* Hidden audio element for the final music */}
       <audio ref={audioRef} preload="auto">
         <source src="/sounds/86-brondesbury-road-5.wav" type="audio/wav" />
@@ -251,11 +262,8 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
         )}
       </AnimatePresence>
 
-      <div
-        className="w-full max-w-sm h-full flex flex-col overflow-y-auto"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
-        <div className="flex-1 min-h-0 py-4">
+      <div className="w-full max-w-sm h-full flex flex-col relative z-10">
+        <div className="flex-1 overflow-y-auto py-4" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
           {/* Optimized Shareable Card */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -265,23 +273,18 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
           >
             <div
               className="w-full pixel-card p-6 flex flex-col bg-gradient-to-b from-yellow-200 to-yellow-100 relative overflow-hidden"
-              style={{ aspectRatio: "2/3", minHeight: "600px" }}
+              style={{ aspectRatio: "2/3", minHeight: "500px" }}
             >
               {/* Header */}
-              <div className="text-center mb-4 relative z-10">
+              <div className="text-center mb-2 relative z-10">
                 <div className="text-4xl mb-2">🏆</div>
                 <h1 className="font-display text-base text-contrast-dark tracking-wide mb-1">YOUR FPL MANAGER</h1>
                 <h1 className="font-display text-base text-contrast-dark tracking-wide mb-2">MOMENTS</h1>
                 <div className="font-display text-md text-contrast-dark tracking-wide mb-2">{data.managerTitle}</div>
               </div>
 
-              {/* Avatar */}
-              <div className="flex justify-center mb-4 relative z-10">
-                <RetroAvatar isMoving={false} kitColor="#ef4444" size="large" role="manager" />
-              </div>
-
               {/* Manager Name & Team */}
-              <div className="text-center mb-3 relative z-10 space-y-1">
+              <div className="text-center mb-2 relative z-10 space-y-1">
                 <div className="pixel-card p-2 bg-white">
                   <div className="font-display text-sm text-contrast-dark tracking-wide truncate px-1">
                     {data.managerName}
@@ -295,7 +298,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
               </div>
 
               {/* Key Stats */}
-              <div className="grid grid-cols-2 gap-2 mb-3 relative z-10">
+              <div className="grid grid-cols-2 gap-2 mb-2 relative z-10">
                 <div className="pixel-card p-2 text-center bg-green-200">
                   <div className="font-display text-xl text-contrast-dark tracking-wide">{data.totalPoints}</div>
                   <div className="font-body text-xs text-contrast-dark">POINTS</div>
@@ -309,7 +312,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
               </div>
 
               {/* Best GW & Badges */}
-              <div className="grid grid-cols-2 gap-2 mb-3 relative z-10">
+              <div className="grid grid-cols-2 gap-2 mb-2 relative z-10">
                 <div className="pixel-card p-2 text-center bg-red-200">
                   <div className="font-display text-lg text-contrast-dark tracking-wide">{data.bestGw?.points}</div>
                   <div className="font-body text-xs text-contrast-dark">BEST GW</div>
@@ -325,7 +328,7 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
 
               {/* Achievements */}
               <div className="flex-1 relative z-10">
-                <div className="grid grid-cols-1 gap-1">
+                <div className="grid grid-cols-1 gap-0.5">
                   {data.badges.slice(0, 3).map((badge, index) => (
                     <div
                       key={badge}
@@ -354,65 +357,60 @@ export default function RetroFinalCard({ data, onRestart, onBack }: RetroFinalCa
               </div>
             </div>
           </motion.div>
+        </div>
 
-          {/* Enhanced Share Controls */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2.7 }}
-            className="space-y-3 pb-4"
-          >
-            {/* Share Buttons */}
-            <div className="space-y-2">
-              <div className="text-center">
-                <div className="font-display text-xs text-contrast-dark tracking-wide mb-2">SHARE YOUR MOMENT</div>
-              </div>
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                <Button
-                  onClick={shareToWhatsApp}
-                  className="pixel-button py-2 font-display text-xs tracking-wide text-white bg-green-500 hover:bg-green-600 border-green-700"
-                >
-                  <MessageCircle className="w-3 h-3 mr-1" />
-                  <span className="truncate">WHATSAPP</span>
-                </Button>
-                <Button
-                  onClick={shareToInstagram}
-                  className="pixel-button py-2 font-display text-xs tracking-wide text-white bg-purple-500 hover:bg-purple-600 border-purple-700"
-                >
-                  <Instagram className="w-3 h-3 mr-1" />
-                  <span className="truncate">INSTAGRAM</span>
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  onClick={shareToFacebook}
-                  className="pixel-button py-2 font-display text-xs tracking-wide text-white bg-blue-500 hover:bg-blue-600 border-blue-700"
-                >
-                  <Facebook className="w-3 h-3 mr-1" />
-                  <span className="truncate">FACEBOOK</span>
-                </Button>
-                <Button
-                  onClick={shareGeneric}
-                  className="pixel-button py-2 font-display text-xs tracking-wide text-white bg-gray-500 hover:bg-gray-600 border-gray-700"
-                >
-                  <Share2 className="w-3 h-3 mr-1" />
-                  <span className="truncate">INVITE FRIENDS</span>
-                </Button>
-              </div>
+        {/* Enhanced Share Controls */}
+        <div className="flex-shrink-0 space-y-3 pb-4 bg-gradient-to-t from-black/20 to-transparent pt-4">
+          {/* Share Buttons */}
+          <div className="space-y-2">
+            <div className="text-center">
+              <div className="font-display text-xs text-contrast-dark tracking-wide mb-2">SHARE YOUR MOMENT</div>
             </div>
-
-            {/* Navigation */}
-            <div className="grid grid-cols-2 gap-3">
-              <Button onClick={onBack} className="pixel-button py-2 font-display text-xs tracking-wide">
-                <ArrowLeft className="w-4 h-4 mr-1" />
-                BACK
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <Button
+                onClick={shareToWhatsApp}
+                className="pixel-button py-2 font-display text-xs tracking-wide text-white bg-green-500 hover:bg-green-600 border-green-700"
+              >
+                <MessageCircle className="w-3 h-3 mr-1" />
+                <span className="truncate">WHATSAPP</span>
               </Button>
-              <Button onClick={onRestart} className="pixel-button py-2 font-display text-xs tracking-wide">
-                <RotateCcw className="w-4 h-4 mr-1" />
-                RESTART
+              <Button
+                onClick={shareToInstagram}
+                className="pixel-button py-2 font-display text-xs tracking-wide text-white bg-purple-500 hover:bg-purple-600 border-purple-700"
+              >
+                <Instagram className="w-3 h-3 mr-1" />
+                <span className="truncate">INSTAGRAM</span>
               </Button>
             </div>
-          </motion.div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                onClick={shareToFacebook}
+                className="pixel-button py-2 font-display text-xs tracking-wide text-white bg-blue-500 hover:bg-blue-600 border-blue-700"
+              >
+                <Facebook className="w-3 h-3 mr-1" />
+                <span className="truncate">FACEBOOK</span>
+              </Button>
+              <Button
+                onClick={shareGeneric}
+                className="pixel-button py-2 font-display text-xs tracking-wide text-white bg-gray-500 hover:bg-gray-600 border-gray-700"
+              >
+                <Share2 className="w-3 h-3 mr-1" />
+                <span className="truncate">INVITE FRIENDS</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div className="grid grid-cols-2 gap-3">
+            <Button onClick={onBack} className="pixel-button py-2 font-display text-xs tracking-wide">
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              BACK
+            </Button>
+            <Button onClick={onRestart} className="pixel-button py-2 font-display text-xs tracking-wide">
+              <RotateCcw className="w-4 h-4 mr-1" />
+              RESTART
+            </Button>
+          </div>
         </div>
       </div>
     </div>
