@@ -35,8 +35,8 @@ export default function IntroScreen({ onStart, error }: IntroScreenProps) {
     }
   }
 
-  return (
-    <div className="h-screen w-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    return (
+      <div className="h-screen w-screen relative overflow-hidden bg-gradient-to-br from-[#0E0F1B] via-[#1B1D2B] to-[#0E0F1B]">
       <SceneWrapper scene="stadium">
         <div className="h-full w-full flex flex-col max-w-4xl mx-auto p-4">
           {/* Header */}
@@ -84,7 +84,7 @@ export default function IntroScreen({ onStart, error }: IntroScreenProps) {
               <div className="modern-card rounded-2xl p-6">
                 <div className="text-center mb-6">
                   <div className="text-white text-xl font-display mb-3">Enter Manager ID</div>
-                  <div className="w-full h-0.5 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"></div>
+                    <div className="w-full h-0.5 bg-gradient-to-r from-[#45A1FF] to-[#00C2A8] rounded-full"></div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">

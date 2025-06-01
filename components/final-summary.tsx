@@ -183,8 +183,8 @@ export default function FinalSummary({ data, onRestart, onBack }: FinalSummaryPr
     setShowShareOptions(true)
   }
 
-  return (
-    <div className="h-screen w-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    return (
+      <div className="h-screen w-screen relative overflow-hidden bg-gradient-to-br from-[#0E0F1B] via-[#1B1D2B] to-[#0E0F1B]">
       <SceneWrapper scene="trophy">
         <div className="h-full w-full flex items-center justify-center p-4">
           <motion.div
