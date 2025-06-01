@@ -62,6 +62,7 @@ interface FPLBootstrap {
 
 // Production-ready demo data
 const DEMO_DATA: FPLData = {
+  managerId: "demo",
   managerName: "Demo Manager",
   teamName: "Demo Team FC",
   totalPoints: 2156,
@@ -226,7 +227,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (managerId === "demo" || managerId === "1") {
       monitor.trackApiCall(endpoint, Date.now() - startTime, true)
       monitor.trackUserAction("demo_mode_used")
-      return NextResponse.json(DEMO_DATA, {
+      return NextResponse.json({ ...DEMO_DATA, managerId }, {
         headers: {
           "Cache-Control": "public, max-age=3600",
           "X-Response-Time": `${Date.now() - startTime}ms`,
@@ -275,6 +276,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       historyData.status === "fulfilled" ? historyData.value : { current: [], chips: [] },
       transfersData.status === "fulfilled" ? transfersData.value : { length: 38 },
       bootstrapData.status === "fulfilled" ? bootstrapData.value : { elements: [], events: [] },
+      managerId,
     )
 
     // Validate processed data
@@ -340,6 +342,9 @@ function getClientIP(request: NextRequest): string {
 function validateFPLData(data: FPLData): boolean {
   try {
     return (
+      typeof data.managerId === "string" &&
+      data.managerId.length > 0 &&
+      data.managerId.length <= 100 &&
       typeof data.managerName === "string" &&
       data.managerName.length > 0 &&
       data.managerName.length <= 100 &&
@@ -394,6 +399,7 @@ function processFPLData(
   history: FPLHistory,
   transfers: FPLTransfers,
   bootstrap: FPLBootstrap,
+  managerId: string,
 ): FPLData {
   const current = history.current || []
 
@@ -594,6 +600,7 @@ function processFPLData(
 
   // Return validated and sanitized data
   return {
+    managerId,
     managerName: sanitizeString(`${manager.player_first_name} ${manager.player_last_name}`),
     teamName: sanitizeString(manager.name || "FPL Team"),
     totalPoints: Math.max(0, Math.min(5000, manager.summary_overall_points)),
