@@ -165,7 +165,7 @@ export default function HomePage() {
                 <div className="space-responsive-sm">
                   <Button
                     onClick={handleRestart}
-                    className="cta-button w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-2 border-black font-bold gpu-accelerated"
+                    className="cta-button w-full bg-gradient-to-br from-[#F04E98] to-[#FF76B4] hover:from-[#F04E98]/90 hover:to-[#FF76B4]/90 text-white border-2 border-black font-bold gpu-accelerated"
                   >
                     <span className="text-button font-bold">TRY AGAIN</span>
                   </Button>

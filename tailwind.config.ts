@@ -10,8 +10,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        mono: ["Courier New", "Monaco", "Menlo", "monospace"],
-        sans: ["Courier New", "Monaco", "Menlo", "monospace"],
+        mono: ["Inter", "ui-monospace", "monospace"],
+        sans: ["Inter", "sans-serif"],
+        display: ["Red Hat Display", "Sora", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
