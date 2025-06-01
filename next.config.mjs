@@ -13,6 +13,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+
+  // Cache busting and versioning
+  generateEtags: false,
   
   // Image optimization for production
   images: {
@@ -25,11 +28,74 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
+  // Headers for cache control and performance
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, max-age=0',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/images/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400',
+          },
+        ],
+      },
+    ]
+  },
+
   // Performance optimizations
   experimental: {
     optimizePackageImports: ['framer-motion', 'lucide-react'],
     serverComponentsExternalPackages: [],
     gzipSize: true,
+    optimizeCss: true,
     // Add modern bundling optimizations
     turbo: {
       rules: {
@@ -42,7 +108,16 @@ const nextConfig = {
   },
 
   // Webpack optimizations for production
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config, { dev, isServer, buildId }) => {
+    // Add build ID to ensure cache busting
+    config.output.filename = dev 
+      ? '[name].js' 
+      : `[name].[contenthash].${buildId}.js`
+    
+    config.output.chunkFilename = dev 
+      ? '[name].js' 
+      : `[name].[contenthash].${buildId}.js`
+
     // Production optimizations
     if (!dev && !isServer) {
       // Enhanced bundle splitting
@@ -54,12 +129,21 @@ const nextConfig = {
             name: 'vendors',
             chunks: 'all',
             priority: 10,
+            enforce: true,
           },
           framerMotion: {
             test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
             name: 'framer-motion',
             chunks: 'all',
             priority: 20,
+            enforce: true,
+          },
+          lucide: {
+            test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
+            name: 'lucide',
+            chunks: 'all',
+            priority: 15,
+            enforce: true,
           },
           common: {
             name: 'common',
@@ -67,6 +151,7 @@ const nextConfig = {
             chunks: 'all',
             priority: 5,
             reuseExistingChunk: true,
+            enforce: true,
           },
         },
       }
@@ -77,6 +162,9 @@ const nextConfig = {
       
       // Add module concatenation
       config.optimization.concatenateModules = true
+
+      // Minimize bundle size
+      config.optimization.minimize = true
     }
 
     // Ignore source maps in production for smaller bundles
@@ -84,11 +172,28 @@ const nextConfig = {
       config.devtool = false
     }
 
+    // Add performance hints
+    config.performance = {
+      hints: 'warning',
+      maxEntrypointSize: 512000,
+      maxAssetSize: 512000,
+    }
+
     return config
   },
 
   // Output configuration for deployment
   output: 'standalone',
+
+  // Redirect configuration
+  async redirects() {
+    return []
+  },
+
+  // Rewrite configuration for better SEO
+  async rewrites() {
+    return []
+  },
 }
 
 export default nextConfig
