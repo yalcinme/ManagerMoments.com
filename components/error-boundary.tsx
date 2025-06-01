@@ -1,69 +1,48 @@
 "use client"
 
-import React from "react"
-import { Button } from "@/components/ui/button"
-import { AlertTriangle, RefreshCw } from "lucide-react"
+import { Component, type ErrorInfo, type ReactNode } from "react"
 
-interface ErrorBoundaryState {
+interface Props {
+  children: ReactNode
+  fallback?: ReactNode
+}
+
+interface State {
   hasError: boolean
   error?: Error
 }
 
-interface ErrorBoundaryProps {
-  children: React.ReactNode
-  onError?: () => void
-}
-
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
     super(props)
     this.state = { hasError: false }
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("ErrorBoundary caught an error:", error, errorInfo)
-
-    // Call the onError callback if provided
-    if (this.props.onError) {
-      this.props.onError()
-    }
   }
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback
+      }
+
       return (
-        <div className="h-screen w-screen gradient-red flex items-center justify-center p-4">
-          <div className="w-full max-w-sm">
-            <div className="pixel-card p-6 text-center bg-white">
-              <div className="mb-4">
-                <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                <h1 className="font-display text-lg text-contrast-dark tracking-wide mb-2">SOMETHING WENT WRONG</h1>
-                <p className="font-body text-sm text-contrast-dark leading-relaxed">
-                  We encountered an unexpected error. Please refresh the page.
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <Button
-                  onClick={() => window.location.reload()}
-                  className="pixel-button w-full py-3 font-display text-xs tracking-wide"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  REFRESH PAGE
-                </Button>
-
-                <Button
-                  onClick={() => (window.location.href = "/")}
-                  className="pixel-button w-full py-3 font-display text-xs tracking-wide bg-gray-100"
-                >
-                  GO HOME
-                </Button>
-              </div>
-            </div>
+        <div className="min-h-screen bg-gradient-to-b from-red-900 to-red-700 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-8 text-center max-w-md w-full">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong!</h1>
+            <p className="text-gray-600 mb-6">{this.state.error?.message || "An unexpected error occurred"}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600 transition-colors"
+            >
+              Reload Page
+            </button>
           </div>
         </div>
       )
@@ -72,5 +51,3 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     return this.props.children
   }
 }
-
-export default ErrorBoundary

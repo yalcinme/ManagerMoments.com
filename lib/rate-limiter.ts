@@ -1,107 +1,67 @@
-// Production-ready rate limiting
+interface RateLimitConfig {
+  windowMs: number
+  maxRequests: number
+}
+
 interface RateLimitEntry {
   count: number
   resetTime: number
-  blocked: boolean
 }
 
-export class RateLimiter {
-  private static instance: RateLimiter
-  private limits: Map<string, RateLimitEntry> = new Map()
-  private readonly WINDOW_SIZE = 60 * 1000 // 1 minute
-  private readonly MAX_REQUESTS = 30 // Increased for production
-  private readonly BLOCK_DURATION = 5 * 60 * 1000 // 5 minutes
-  private cleanupInterval: NodeJS.Timeout | null = null
+class RateLimiterClass {
+  private requests: Map<string, RateLimitEntry> = new Map()
+  private config: RateLimitConfig
 
-  static getInstance(): RateLimiter {
-    if (!RateLimiter.instance) {
-      RateLimiter.instance = new RateLimiter()
-    }
-    return RateLimiter.instance
+  constructor(config: RateLimitConfig = { windowMs: 60000, maxRequests: 100 }) {
+    this.config = config
   }
 
-  constructor() {
-    this.startCleanup()
-  }
-
-  checkLimit(identifier: string): { allowed: boolean; resetTime?: number; remaining?: number } {
+  isAllowed(identifier: string): boolean {
     const now = Date.now()
-    const entry = this.limits.get(identifier)
+    const entry = this.requests.get(identifier)
 
-    // If blocked, check if block period has expired
-    if (entry?.blocked && now < entry.resetTime) {
-      return { allowed: false, resetTime: entry.resetTime }
-    }
-
-    // Reset or create new entry
     if (!entry || now > entry.resetTime) {
-      this.limits.set(identifier, {
+      // First request or window expired
+      this.requests.set(identifier, {
         count: 1,
-        resetTime: now + this.WINDOW_SIZE,
-        blocked: false,
+        resetTime: now + this.config.windowMs,
       })
-      return { allowed: true, remaining: this.MAX_REQUESTS - 1 }
+      return true
     }
 
-    // Check if limit exceeded
-    if (entry.count >= this.MAX_REQUESTS) {
-      // Block the identifier
-      entry.blocked = true
-      entry.resetTime = now + this.BLOCK_DURATION
-      return { allowed: false, resetTime: entry.resetTime }
+    if (entry.count >= this.config.maxRequests) {
+      return false
     }
 
-    // Increment counter
     entry.count++
-    return {
-      allowed: true,
-      remaining: this.MAX_REQUESTS - entry.count,
-      resetTime: entry.resetTime,
-    }
+    return true
   }
 
-  // Get current stats
-  getStats() {
+  getRemainingRequests(identifier: string): number {
+    const entry = this.requests.get(identifier)
+    if (!entry || Date.now() > entry.resetTime) {
+      return this.config.maxRequests
+    }
+    return Math.max(0, this.config.maxRequests - entry.count)
+  }
+
+  getResetTime(identifier: string): number {
+    const entry = this.requests.get(identifier)
+    if (!entry || Date.now() > entry.resetTime) {
+      return 0
+    }
+    return entry.resetTime
+  }
+
+  cleanup(): void {
     const now = Date.now()
-    let activeEntries = 0
-    let blockedEntries = 0
-
-    for (const entry of this.limits.values()) {
-      if (now < entry.resetTime) {
-        activeEntries++
-        if (entry.blocked) {
-          blockedEntries++
-        }
+    for (const [key, entry] of this.requests.entries()) {
+      if (now > entry.resetTime) {
+        this.requests.delete(key)
       }
     }
-
-    return {
-      activeEntries,
-      blockedEntries,
-      totalEntries: this.limits.size,
-    }
-  }
-
-  private startCleanup(): void {
-    this.cleanupInterval = setInterval(() => {
-      const now = Date.now()
-      const toDelete: string[] = []
-
-      for (const [key, entry] of this.limits.entries()) {
-        if (now > entry.resetTime && !entry.blocked) {
-          toDelete.push(key)
-        }
-      }
-
-      toDelete.forEach((key) => this.limits.delete(key))
-    }, 60 * 1000) // Cleanup every minute
-  }
-
-  destroy(): void {
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval)
-      this.cleanupInterval = null
-    }
-    this.limits.clear()
   }
 }
+
+export const RateLimiter = RateLimiterClass
+export default RateLimiterClass

@@ -1,186 +1,213 @@
-import type { FPLData } from "@/types/fpl"
-
-export interface RetroInsight {
+// Define the structure for insight data
+export type InsightData = {
   id: string
   title: string
-  icon: "ball" | "target" | "gloves" | "up-arrow" | "down-arrow" | "trophy" | "brain" | "league" | "boost" | "bench"
-  getData: (data: FPLData) => {
+  getData: (data: any) => {
     mainStat: string
     mainLabel: string
     subtitle: string
     secondaryStats?: Array<{ value: string; label: string }>
-    funFact: string
+    funFact?: string
   }
 }
 
-export const retroInsights: RetroInsight[] = [
+// Badge definitions
+type BadgeDetail = {
+  icon: string
+  description: string
+}
+
+const badgeDetails: Record<string, BadgeDetail> = {
+  "Early Bird": {
+    icon: "🐦",
+    description: "Started strong in the first 5 gameweeks, showing excellent early season planning.",
+  },
+  "Captain Fantastic": {
+    icon: "©️",
+    description: "Your captain picks were spot on! Above average captain points throughout the season.",
+  },
+  "Transfer Guru": {
+    icon: "🔄",
+    description: "Made smart transfers that paid off with immediate points returns.",
+  },
+  "Chip Master": {
+    icon: "🎮",
+    description: "Used your chips at optimal times, maximizing their impact.",
+  },
+  "Consistent Performer": {
+    icon: "📈",
+    description: "Maintained a steady rank throughout the season with minimal wild swings.",
+  },
+  "Bench Boost Pro": {
+    icon: "🪑",
+    description: "Your bench boost chip scored above the average of all managers.",
+  },
+  "Triple Captain Hero": {
+    icon: "👑",
+    description: "Your triple captain chip scored above the average of all managers.",
+  },
+  "Free Hit Specialist": {
+    icon: "🎯",
+    description: "Your free hit chip scored above the average of all managers.",
+  },
+  "Wildcard Wizard": {
+    icon: "🧙‍♂️",
+    description: "Your wildcard chip led to significant rank improvements.",
+  },
+  "Diamond Eye": {
+    icon: "💎",
+    description: "Picked multiple differential players who outperformed expectations.",
+  },
+}
+
+export function getBadgeDetails(badge: string): BadgeDetail {
+  return (
+    badgeDetails[badge] || {
+      icon: "🏅",
+      description: "Achievement unlocked during your FPL season.",
+    }
+  )
+}
+
+// Define the insights
+export const retroInsights: InsightData[] = [
   {
     id: "season-kickoff",
-    title: "SEASON KICKOFF",
-    icon: "ball",
+    title: "Season Kickoff",
     getData: (data) => ({
-      mainStat: data.totalPoints.toString(),
-      mainLabel: "TOTAL POINTS",
-      subtitle: `Welcome back, ${data.managerName}! You finished in the top ${Math.round((data.overallRank! / 11000000) * 100)}% of all FPL managers worldwide.`,
+      mainStat: data.bestEarlyGw?.points || "72",
+      mainLabel: `Best early gameweek (GW${data.bestEarlyGw?.gameweek || 3})`,
+      subtitle: `You started the season with confidence, making ${
+        data.earlyTransfers || 8
+      } transfers in the first 5 gameweeks to optimize your team.`,
       secondaryStats: [
-        { value: data.overallRank?.toLocaleString() || "N/A", label: "FINAL RANK" },
-        { value: data.bestGw?.points.toString() || "0", label: "BEST GW" },
+        { value: data.earlyTransfers?.toString() || "8", label: "Early transfers" },
+        { value: data.bestEarlyGw?.gameweek?.toString() || "3", label: "Best early GW" },
       ],
-      funFact: "The average FPL manager scores around 2,000 points per season",
-    }),
-  },
-  {
-    id: "peak-performance",
-    title: "PEAK PERFORMANCE",
-    icon: "trophy",
-    getData: (data) => ({
-      mainStat: data.bestGw?.points.toString() || "0",
-      mainLabel: `GAMEWEEK ${data.bestGw?.gameweek || 1}`,
-      subtitle: `Your best gameweek was ${data.bestGw?.gameweek || 1}, you scored ${data.bestGw?.points || 0} points! This was your moment of FPL glory.`,
-      secondaryStats: [
-        { value: data.worstGw?.points.toString() || "0", label: "WORST GW" },
-        { value: `GW${data.worstGw?.gameweek || 1}`, label: "LOWEST WEEK" },
-      ],
-      funFact: `Only ${Math.round(Math.random() * 15 + 5)}% of managers scored higher that week`,
-    }),
-  },
-  {
-    id: "captaincy-masterclass",
-    title: "CAPTAINCY MASTERCLASS",
-    icon: "target",
-    getData: (data) => ({
-      mainStat: `${data.captainAccuracy}%`,
-      mainLabel: "SUCCESS RATE",
-      subtitle: `Your captains contributed ${Math.round((data.captainPoints / data.totalPoints) * 100)}% of your total points this season.`,
-      secondaryStats: [
-        { value: data.captainPoints.toString(), label: "CAPTAIN PTS" },
-        { value: Math.round((data.captainAccuracy / 100) * 38).toString(), label: "GOOD PICKS" },
-      ],
-      funFact: "Elite managers get their captain pick right 70%+ of the time",
+      funFact:
+        "The first 5 gameweeks often set the tone for the entire FPL season, with early decisions having long-term impacts.",
     }),
   },
   {
     id: "transfer-market",
-    title: "TRANSFER MARKET",
-    icon: "up-arrow",
+    title: "Transfer Market",
     getData: (data) => ({
-      mainStat: data.totalTransfers.toString(),
-      mainLabel: "TOTAL TRANSFERS",
-      subtitle: `You made ${data.totalTransfers} transfers this season, taking ${data.totalHits} hits along the way.`,
+      mainStat: data.totalTransfers?.toString() || "45",
+      mainLabel: "Total transfers made",
+      subtitle: `You made ${data.totalHits || 8} transfers that cost points (-4), showing your willingness to take calculated risks.`,
       secondaryStats: [
-        { value: data.totalHits.toString(), label: "HITS TAKEN" },
-        { value: `${data.totalHits * 4}`, label: "POINTS COST" },
+        { value: data.totalHits?.toString() || "8", label: "Hits taken" },
+        {
+          value: data.mostTransferredIn?.name || "Salah",
+          label: "Most transferred in",
+        },
       ],
-      funFact: data.totalHits > 15 ? "You're a risk-taker!" : "Disciplined strategy!",
+      funFact:
+        "The average FPL manager makes around 30 transfers per season, with the most active making over 100 including hits.",
     }),
   },
   {
-    id: "consistency-check",
-    title: "CONSISTENCY CHECK",
-    icon: "target",
+    id: "captaincy-masterclass",
+    title: "Captaincy Choices",
     getData: (data) => ({
-      mainStat: `${Math.round((data.aboveAverageWeeks / 38) * 100)}%`,
-      mainLabel: "SUCCESS RATE",
-      subtitle: `You beat the gameweek average in ${data.aboveAverageWeeks} out of 38 gameweeks.`,
+      mainStat: data.captainPoints?.toString() || "486",
+      mainLabel: "Captain points",
+      subtitle: `Your captain picks were successful ${data.captainAccuracy || 68}% of the time, outperforming the average player's selection.`,
       secondaryStats: [
-        { value: data.aboveAverageWeeks.toString(), label: "GOOD WEEKS" },
-        { value: (38 - data.aboveAverageWeeks).toString(), label: "BELOW AVG" },
+        { value: `${data.captainAccuracy || 68}%`, label: "Success rate" },
+        { value: data.topPlayer?.name || "Salah", label: "Top captain" },
       ],
-      funFact: "Consistent performers often finish higher than flashy managers",
-    }),
-  },
-  {
-    id: "bench-management",
-    title: "BENCH MANAGEMENT",
-    icon: "bench",
-    getData: (data) => ({
-      mainStat: (data.benchPoints || Math.floor(Math.random() * 200 + 100)).toString(),
-      mainLabel: "POINTS ON BENCH",
-      subtitle: `You left ${data.benchPoints || Math.floor(Math.random() * 200 + 100)} points on your bench this season.`,
-      secondaryStats: [
-        { value: (data.autoSubPoints || Math.floor(Math.random() * 50 + 20)).toString(), label: "AUTO-SUB SAVES" },
-        { value: Math.floor(Math.random() * 15 + 5).toString(), label: "BENCH BOOSTS" },
-      ],
-      funFact: "The average manager leaves 150+ points on their bench each season",
-    }),
-  },
-  {
-    id: "mini-league-rivalry",
-    title: "MINI-LEAGUE RIVALRY",
-    icon: "league",
-    getData: (data) => ({
-      mainStat: data.leagueWins.toString(),
-      mainLabel: "LEAGUES WON",
-      subtitle: `You won ${data.leagueWins} mini-leagues this season and had some epic battles with your rivals.`,
-      secondaryStats: [
-        { value: Math.floor(Math.random() * 50 + 20).toString(), label: "BIGGEST LEAD" },
-        { value: Math.floor(Math.random() * 10 + 5).toString(), label: "LEAGUES JOINED" },
-      ],
-      funFact: "Mini-league rivalries make FPL 10x more exciting!",
-    }),
-  },
-  {
-    id: "most-trusted-player",
-    title: "MOST TRUSTED PLAYER",
-    icon: "gloves",
-    getData: (data) => ({
-      mainStat: data.topPlayer.points.toString(),
-      mainLabel: `${data.topPlayer.name.toUpperCase()}`,
-      subtitle: `${data.topPlayer.name} was your most reliable performer, delivering ${data.topPlayer.points} points.`,
-      secondaryStats: [
-        { value: Math.round((data.topPlayer.points / data.totalPoints) * 100) + "%", label: "OF TOTAL PTS" },
-        { value: Math.floor(data.topPlayer.points / 38).toString(), label: "AVG PER GW" },
-      ],
-      funFact: "Having a reliable premium player is key to FPL success",
+      funFact:
+        "Captaincy choices can account for up to 25% of your total points in a season - making it one of the most crucial weekly decisions.",
     }),
   },
   {
     id: "chip-effectiveness",
-    title: "CHIP EFFECTIVENESS",
-    icon: "boost",
+    title: "Chip Strategy",
     getData: (data) => ({
-      mainStat: data.chipsUsed.length.toString(),
-      mainLabel: "CHIPS USED",
-      subtitle: `You used ${data.chipsUsed.length} chips this season. ${data.bestChip ? `Your best was ${data.bestChip.name} in GW${data.bestChip.gameweek}.` : "Strategic chip usage is crucial!"}`,
-      secondaryStats: data.bestChip
-        ? [
-            { value: data.bestChip.points.toString(), label: "BEST CHIP PTS" },
-            { value: `GW${data.bestChip.gameweek}`, label: "TIMING" },
-          ]
-        : [
-            { value: "0", label: "CHIPS LEFT" },
-            { value: "N/A", label: "BEST TIMING" },
-          ],
-      funFact: "Timing your chips perfectly can gain you 100+ points",
+      mainStat: data.bestChip?.points?.toString() || "36",
+      mainLabel: `${data.bestChip?.name || "Triple Captain"} points (GW${data.bestChip?.gameweek || 15})`,
+      subtitle: `You used your chips strategically, with your ${
+        data.bestChip?.name || "Triple Captain"
+      } in GW${data.bestChip?.gameweek || 15} being the most effective.`,
+      secondaryStats: data.chipsUsed?.slice(0, 2).map((chip) => ({
+        value: `GW${chip.gameweek}`,
+        label: chip.name,
+      })) || [
+        { value: "GW15", label: "Triple Captain" },
+        { value: "GW29", label: "Bench Boost" },
+      ],
+      funFact:
+        "The most successful FPL managers often save their chips for double gameweeks, potentially doubling their points haul.",
     }),
   },
   {
-    id: "you-vs-the-game",
-    title: "YOU VS THE GAME",
-    icon: "up-arrow",
+    id: "bench-management",
+    title: "Bench Management",
     getData: (data) => ({
-      mainStat: `${data.greenArrows}`,
-      mainLabel: "GREEN ARROWS",
-      subtitle: `You had ${data.greenArrows} green arrows and ${data.redArrows} red arrows this season.`,
+      mainStat: data.benchPoints?.toString() || "187",
+      mainLabel: "Points left on bench",
+      subtitle: `Your bench players were auto-substituted ${data.autoSubPoints || 34} times, adding valuable points when your starters didn't play.`,
       secondaryStats: [
-        { value: data.redArrows.toString(), label: "RED ARROWS" },
+        { value: data.autoSubPoints?.toString() || "34", label: "Auto-sub points" },
+        { value: `£${data.maxTeamValue?.toString() || "103.2"}m`, label: "Max team value" },
+      ],
+      funFact:
+        "The average FPL manager leaves around 200 points on their bench throughout a season - that's equivalent to 5-6 good gameweeks!",
+    }),
+  },
+  {
+    id: "consistency-check",
+    title: "Consistency Check",
+    getData: (data) => ({
+      mainStat: data.aboveAverageWeeks?.toString() || "24",
+      mainLabel: "Weeks above average",
+      subtitle: `You scored above the gameweek average ${data.aboveAverageWeeks || 24} times, showing consistent performance throughout the season.`,
+      secondaryStats: [
+        { value: data.greenArrows?.toString() || "22", label: "Green arrows" },
+        { value: data.redArrows?.toString() || "16", label: "Red arrows" },
+      ],
+      funFact:
+        "Consistency is key in FPL - managers who score above the average in 60% or more gameweeks typically finish in the top 10% overall.",
+    }),
+  },
+  {
+    id: "peak-performance",
+    title: "Peak Performance",
+    getData: (data) => ({
+      mainStat: data.bestGw?.points?.toString() || "143",
+      mainLabel: `Best gameweek (GW${data.bestGw?.gameweek || 15})`,
+      subtitle: `Your highest scoring gameweek came in GW${
+        data.bestGw?.gameweek || 15
+      }, where your team significantly outperformed the average.`,
+      secondaryStats: [
+        { value: data.worstGw?.points?.toString() || "28", label: `Worst (GW${data.worstGw?.gameweek || 8})` },
         {
-          value: Math.round((data.greenArrows / (data.greenArrows + data.redArrows)) * 100) + "%",
-          label: "SUCCESS RATE",
+          value: `${data.biggestRankJump?.places?.toLocaleString() || "180,000"}`,
+          label: "Biggest rank jump",
         },
       ],
-      funFact: "Green arrows mean your rank improved, red arrows mean your rank dropped",
+      funFact: "The highest ever recorded gameweek score in FPL history is 202 points, achieved in the 2018/19 season.",
     }),
   },
   {
     id: "season-recap",
-    title: "SEASON RECAP",
-    icon: "trophy",
+    title: "Season Recap",
     getData: (data) => ({
-      mainStat: data.badges.length.toString(),
-      mainLabel: "BADGES EARNED",
-      subtitle: `You've earned ${data.badges.length} achievement badges this season. Each one tells a story of your FPL journey.`,
-      funFact: "Every badge represents a milestone in your FPL journey",
+      mainStat: data.totalPoints?.toLocaleString() || "2,156",
+      mainLabel: "Total points",
+      subtitle: `You finished with a rank of ${
+        data.overallRank?.toLocaleString() || "234,567"
+      }, placing you in the top ${Math.round((data.overallRank || 234567) / 10000) / 100 || 2.35}% of all managers.`,
+      secondaryStats: [
+        { value: data.overallRank?.toLocaleString() || "234,567", label: "Final rank" },
+        { value: data.managerTitle || "Tactical Genius", label: "Manager title" },
+      ],
+      funFact:
+        "Only about 5% of FPL managers finish a season with more than 2,200 points, putting them in the elite category.",
     }),
   },
 ]
+
+// Export a default empty array if retroInsights is undefined
+export default retroInsights || []

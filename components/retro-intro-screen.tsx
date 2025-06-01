@@ -2,283 +2,237 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Play, HelpCircle, Trophy, Target, Users, X } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Trophy, Users, TrendingUp, Target, HelpCircle, X } from "lucide-react"
 
 interface RetroIntroScreenProps {
-  onStart: (managerId: string) => void
-  error?: string | null
+  onStartGame: (managerId: string) => void
 }
 
-export default function RetroIntroScreen({ onStart, error }: RetroIntroScreenProps) {
+export function RetroIntroScreen({ onStartGame }: RetroIntroScreenProps) {
   const [managerId, setManagerId] = useState("")
   const [showHelp, setShowHelp] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (managerId.trim()) {
-      onStart(managerId.trim())
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+
+      try {
+        if (!managerId || typeof managerId !== "string") {
+          alert("Please enter a valid Manager ID")
+          return
+        }
+
+        const cleanId = managerId.toString().trim()
+        if (!cleanId || cleanId.length === 0) {
+          alert("Please enter a valid Manager ID")
+          return
+        }
+
+        setIsLoading(true)
+        await new Promise((resolve) => setTimeout(resolve, 100)) // Small delay for UX
+        onStartGame(cleanId)
+      } catch (error) {
+        console.error("Error submitting form:", error)
+        alert("Something went wrong. Please try again.")
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [managerId, onStartGame],
+  )
+
+  const handleDemoMode = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      onStartGame("demo")
+    } catch (error) {
+      console.error("Error starting demo:", error)
+      alert("Something went wrong. Please try again.")
+    } finally {
+      setIsLoading(false)
     }
-  }
+  }, [onStartGame])
 
-  const handleDemoClick = () => {
-    onStart("demo")
-  }
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const value = e.target?.value || ""
+      setManagerId(value)
+    } catch (error) {
+      console.error("Error handling input change:", error)
+    }
+  }, [])
+
+  // Preload images for better performance
+  useEffect(() => {
+    const preloadImages = () => {
+      try {
+        const images = [
+          "/images/season-kickoff-new.png",
+          "/images/transfer-market-new.png",
+          "/images/peak-performance-new.png",
+          "/images/captaincy-masterclass-new.png",
+          "/images/consistency-check-new.png",
+          "/images/bench-management-new.png",
+        ]
+
+        if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+          requestIdleCallback(() => {
+            images.forEach((src) => {
+              const img = new Image()
+              img.src = src
+            })
+          })
+        }
+      } catch (error) {
+        console.error("Error preloading images:", error)
+      }
+    }
+
+    preloadImages()
+  }, [])
 
   return (
-    <div className="min-h-screen w-screen bg-gradient-to-br from-green-600 via-blue-600 to-purple-700 flex flex-col relative overflow-y-auto">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
+      {/* Animated background particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <motion.div
+        {[...Array(20)].map((_, i) => (
+          <div
             key={i}
-            initial={{
-              x: Math.random() * (typeof window !== "undefined" ? window.innerWidth : 800),
-              y: (typeof window !== "undefined" ? window.innerHeight : 600) + 20,
-              opacity: 0.1,
+            className="absolute w-1 h-1 bg-green-400/30 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 2}s`,
             }}
-            animate={{
-              y: -20,
-              opacity: [0.1, 0.3, 0.1],
-            }}
-            transition={{
-              duration: 10 + Math.random() * 5,
-              repeat: Number.POSITIVE_INFINITY,
-              delay: Math.random() * 10,
-            }}
-            className="absolute w-2 h-2 bg-white rounded-full"
           />
         ))}
       </div>
 
-      {/* Main Content Container */}
-      <div className="flex-1 flex flex-col items-center justify-start p-responsive-sm relative z-10 container-responsive-md mx-auto">
-        {/* Header Section */}
-        <motion.div
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.8 }}
-          className="text-center m-responsive-lg"
-          style={{ marginTop: "clamp(16px, 4vw, 32px)" }}
-        >
-          <motion.div
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
-            className="m-responsive-md"
-          >
-            <Trophy className="icon-responsive-xl text-yellow-400 mx-auto mb-4 drop-shadow-lg" />
-          </motion.div>
-          <h1 className="font-display text-title text-white font-bold mb-2 drop-shadow-lg">FPL MANAGER MOMENTS 2024</h1>
-          <p className="font-body text-small text-gray-200 leading-relaxed drop-shadow-sm">
-            Relive Your Fantasy Premier League season with insights
+      <div className="w-full max-w-4xl mx-auto space-y-8 relative z-10">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-3 bg-green-600/20 backdrop-blur-sm rounded-full px-6 py-3 border border-green-400/30">
+            <Trophy className="w-8 h-8 text-yellow-400" />
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white pixel-font">FPL Manager Moments</h1>
+          </div>
+          <p className="text-lg md:text-xl text-green-100 max-w-2xl mx-auto leading-relaxed">
+            Relive your Fantasy Premier League season through an interactive retro gaming experience
           </p>
-        </motion.div>
+        </div>
 
-        {/* Features Preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="grid grid-cols-3 space-responsive-sm m-responsive-lg w-full"
-          style={{ maxWidth: "clamp(280px, 85vw, 400px)" }}
-        >
-          <div
-            className="pixel-card p-responsive-sm bg-white/95 backdrop-blur-sm text-center flex flex-col items-center justify-center"
-            style={{ minHeight: "clamp(60px, 15vw, 90px)" }}
-          >
-            <Target className="icon-responsive-md text-yellow-600 mx-auto mb-1 flex-shrink-0" />
-            <div className="font-body text-nano text-black font-semibold text-center leading-tight overflow-hidden">
-              Performance
-            </div>
-          </div>
-          <div
-            className="pixel-card p-responsive-sm bg-white/95 backdrop-blur-sm text-center flex flex-col items-center justify-center"
-            style={{ minHeight: "clamp(60px, 15vw, 90px)" }}
-          >
-            <Trophy className="icon-responsive-md text-yellow-600 mx-auto mb-1 flex-shrink-0" />
-            <div className="font-body text-nano text-black font-semibold text-center leading-tight overflow-hidden">
-              Achievements
-            </div>
-          </div>
-          <div
-            className="pixel-card p-responsive-sm bg-white/95 backdrop-blur-sm text-center flex flex-col items-center justify-center"
-            style={{ minHeight: "clamp(60px, 15vw, 90px)" }}
-          >
-            <Users className="icon-responsive-md text-yellow-600 mx-auto mb-1 flex-shrink-0" />
-            <div className="font-body text-nano text-black font-semibold text-center leading-tight overflow-hidden">
-              Insights
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Input Form */}
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.6, type: "spring" }}
-          className="w-full m-responsive-md"
-        >
-          <div className="pixel-card p-responsive-lg bg-white/95 backdrop-blur-sm">
-            <form onSubmit={handleSubmit} className="space-responsive-sm flex flex-col">
-              <div>
-                <label htmlFor="managerId" className="block font-body text-small text-gray-800 font-semibold mb-2">
-                  Enter Your FPL Manager ID
-                </label>
-                <Input
-                  id="managerId"
-                  type="text"
-                  value={managerId}
-                  onChange={(e) => setManagerId(e.target.value)}
-                  placeholder="e.g. 123456"
-                  className="w-full pixel-input text-body"
-                  required
-                />
+        {/* Main Card */}
+        <Card className="bg-black/60 backdrop-blur-sm border-green-400/30 shadow-2xl">
+          <CardContent className="p-8 space-y-8">
+            {/* Manager ID Form */}
+            <div className="space-y-6">
+              <div className="text-center space-y-2">
+                <h2 className="text-2xl font-bold text-white">Enter Your Manager ID</h2>
+                <p className="text-green-200">
+                  Find your Manager ID in the FPL app under "Points" → "Gameweek history"
+                </p>
               </div>
 
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="pixel-card p-responsive-sm bg-red-100 border border-red-300"
-                >
-                  <p className="font-body text-small text-red-700">{error}</p>
-                </motion.div>
-              )}
-
-              <Button
-                type="submit"
-                disabled={!managerId.trim()}
-                className="w-full cta-button bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold disabled:opacity-50"
-              >
-                <Play className="icon-responsive-sm mr-2" />
-                <span className="text-button">REVEAL MY MOMENTS</span>
-              </Button>
-            </form>
-
-            <div className="mt-4 text-center space-responsive-xs flex flex-col">
-              <div className="font-body text-micro text-gray-600">Don't have your ID?</div>
-              <Button
-                onClick={handleDemoClick}
-                className="w-full cta-button-secondary bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold"
-              >
-                <span className="text-button">TRY DEMO MODE</span>
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Help Button */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="w-full m-responsive-lg"
-        >
-          <Button
-            onClick={() => setShowHelp(true)}
-            className="w-full pixel-button bg-white/20 hover:bg-white/30 text-white border border-white/30 p-responsive-sm flex items-center justify-center"
-          >
-            <HelpCircle className="icon-responsive-sm mr-2" />
-            <span className="font-body text-small font-semibold">How to find your FPL Manager ID</span>
-          </Button>
-        </motion.div>
-
-        {/* Help Modal */}
-        <AnimatePresence>
-          {showHelp && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-              onClick={() => setShowHelp(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                className="pixel-card p-responsive-lg container-responsive-md bg-white"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-display text-body text-gray-900 font-bold">Find Your FPL Manager ID</h3>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="Enter your FPL Manager ID"
+                    value={managerId}
+                    onChange={handleInputChange}
+                    className="flex-1 bg-black/40 border-green-400/50 text-white placeholder:text-green-300/60 focus:border-green-400 focus:ring-green-400/20 text-lg py-3"
+                    disabled={isLoading}
+                  />
                   <Button
-                    onClick={() => setShowHelp(false)}
-                    className="pixel-button p-1 bg-gray-200 hover:bg-gray-300"
-                    style={{ width: "clamp(24px, 6vw, 32px)", height: "clamp(24px, 6vw, 32px)" }}
+                    type="submit"
+                    disabled={!managerId.trim() || isLoading}
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                   >
-                    <X className="icon-responsive-sm" />
+                    {isLoading ? "Starting..." : "Start Journey"}
                   </Button>
                 </div>
+              </form>
 
-                <div className="space-responsive-sm font-body text-small text-gray-800 leading-relaxed">
-                  <div>
-                    <strong className="text-gray-900">Step 1:</strong> Go to{" "}
-                    <a
-                      href="https://fantasy.premierleague.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline hover:text-blue-800"
-                    >
-                      fantasy.premierleague.com
-                    </a>
-                  </div>
-                  <div>
-                    <strong className="text-gray-900">Step 2:</strong> Log into your FPL account
-                  </div>
-                  <div>
-                    <strong className="text-gray-900">Step 3:</strong> Go to "Points" or "Transfers" page
-                  </div>
-                  <div>
-                    <strong className="text-gray-900">Step 4:</strong> Look at the URL in your browser
-                  </div>
-                  <div>
-                    <strong className="text-gray-900">Step 5:</strong> Your Manager ID is the number after "/entry/"
-                  </div>
-                  <div className="pixel-card p-responsive-sm bg-gray-100 border border-gray-300 mt-3">
-                    <div className="font-body text-micro text-gray-700">
-                      <strong>Example:</strong>
-                      <br />
-                      URL: fantasy.premierleague.com/entry/
-                      <span className="bg-yellow-200 px-1 rounded">123456</span>
-                      /event/38
-                      <br />
-                      Your ID: <strong>123456</strong>
-                    </div>
-                  </div>
-                  <div className="text-center mt-4">
-                    <div className="font-body text-micro text-gray-600">
-                      Still can't find it? Try our demo mode to see how the app works!
-                    </div>
-                  </div>
+              <div className="text-center">
+                <Button
+                  variant="outline"
+                  onClick={handleDemoMode}
+                  disabled={isLoading}
+                  className="border-green-400/50 text-green-300 hover:bg-green-400/10 hover:text-green-200 transition-all duration-200"
+                >
+                  {isLoading ? "Loading..." : "Try Demo Mode"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Features Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { icon: Trophy, title: "Season Highlights", desc: "Relive your best moments" },
+                { icon: Users, title: "Manager Analysis", desc: "Deep dive into your decisions" },
+                { icon: TrendingUp, title: "Performance Insights", desc: "Track your progress" },
+                { icon: Target, title: "Strategic Review", desc: "Learn from your choices" },
+              ].map((feature, index) => (
+                <div
+                  key={index}
+                  className="bg-green-900/30 backdrop-blur-sm rounded-lg p-4 border border-green-400/20 hover:border-green-400/40 transition-all duration-300 group"
+                >
+                  <feature.icon className="w-8 h-8 text-green-400 mb-3 group-hover:scale-110 transition-transform duration-200" />
+                  <h3 className="font-semibold text-white mb-2">{feature.title}</h3>
+                  <p className="text-sm text-green-200/80">{feature.desc}</p>
                 </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              ))}
+            </div>
 
-        {/* Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.0 }}
-          className="text-center pb-8"
-        >
-          <p className="font-body text-micro text-gray-300">
-            Made with ⚽ for FPL managers worldwide •{" "}
-            <a
-              href="https://github.com/yalcinme"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-300 hover:text-blue-200 underline"
-            >
-              GitHub
-            </a>
-          </p>
-        </motion.div>
+            {/* Help Button */}
+            <div className="text-center">
+              <Button
+                variant="ghost"
+                onClick={() => setShowHelp(true)}
+                className="text-green-300 hover:text-green-200 hover:bg-green-400/10"
+              >
+                <HelpCircle className="w-4 h-4 mr-2" />
+                Need help finding your Manager ID?
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Help Modal */}
+        {showHelp && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <Card className="bg-black/90 border-green-400/30 max-w-md w-full">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white">Finding Your Manager ID</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowHelp(false)}
+                    className="text-green-300 hover:text-green-200"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="space-y-3 text-green-200">
+                  <p>1. Open the official FPL app or website</p>
+                  <p>2. Go to "Points" section</p>
+                  <p>3. Select "Gameweek history"</p>
+                  <p>4. Your Manager ID is displayed at the top</p>
+                  <p className="text-sm text-green-300/80 mt-4">It's usually a 6-8 digit number like "1234567"</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   )
