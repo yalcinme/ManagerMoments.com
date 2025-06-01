@@ -1,67 +1,45 @@
-interface RateLimitConfig {
-  windowMs: number
-  maxRequests: number
-}
+// Simple in-memory rate limiter for development
+export class RateLimiter {
+  private static instance: RateLimiter
+  private requests: Map<string, { count: number; resetTime: number }> = new Map()
 
-interface RateLimitEntry {
-  count: number
-  resetTime: number
-}
-
-class RateLimiterClass {
-  private requests: Map<string, RateLimitEntry> = new Map()
-  private config: RateLimitConfig
-
-  constructor(config: RateLimitConfig = { windowMs: 60000, maxRequests: 100 }) {
-    this.config = config
+  static getInstance(): RateLimiter {
+    if (!RateLimiter.instance) {
+      RateLimiter.instance = new RateLimiter()
+    }
+    return RateLimiter.instance
   }
 
-  isAllowed(identifier: string): boolean {
+  checkLimit(key: string, limit: number, windowSeconds: number): boolean {
     const now = Date.now()
-    const entry = this.requests.get(identifier)
+    const windowMs = windowSeconds * 1000
 
-    if (!entry || now > entry.resetTime) {
-      // First request or window expired
-      this.requests.set(identifier, {
+    const record = this.requests.get(key)
+
+    if (!record || now > record.resetTime) {
+      // New window or expired window
+      this.requests.set(key, {
         count: 1,
-        resetTime: now + this.config.windowMs,
+        resetTime: now + windowMs,
       })
       return true
     }
 
-    if (entry.count >= this.config.maxRequests) {
+    if (record.count >= limit) {
       return false
     }
 
-    entry.count++
+    record.count++
     return true
   }
 
-  getRemainingRequests(identifier: string): number {
-    const entry = this.requests.get(identifier)
-    if (!entry || Date.now() > entry.resetTime) {
-      return this.config.maxRequests
-    }
-    return Math.max(0, this.config.maxRequests - entry.count)
-  }
-
-  getResetTime(identifier: string): number {
-    const entry = this.requests.get(identifier)
-    if (!entry || Date.now() > entry.resetTime) {
-      return 0
-    }
-    return entry.resetTime
-  }
-
+  // Clean up expired entries periodically
   cleanup(): void {
     const now = Date.now()
-    for (const [key, entry] of this.requests.entries()) {
-      if (now > entry.resetTime) {
+    for (const [key, record] of this.requests.entries()) {
+      if (now > record.resetTime) {
         this.requests.delete(key)
       }
     }
   }
 }
-
-export const RateLimiter = RateLimiterClass
-export default RateLimiterClass

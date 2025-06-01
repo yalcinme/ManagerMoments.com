@@ -1,10 +1,10 @@
-// Production monitoring and analytics utilities
+// Simple monitoring utilities for production
 export class ProductionMonitor {
   private static instance: ProductionMonitor
   private metrics: Map<string, number> = new Map()
   private errors: Array<{ timestamp: number; error: string; context?: any }> = []
-  private readonly MAX_ERRORS = 1000
-  private readonly MAX_METRICS = 500
+  private readonly MAX_ERRORS = 100
+  private readonly MAX_METRICS = 100
 
   static getInstance(): ProductionMonitor {
     if (!ProductionMonitor.instance) {
@@ -14,7 +14,7 @@ export class ProductionMonitor {
   }
 
   // Track API performance
-  trackApiCall(endpoint: string, duration: number, success: boolean) {
+  trackApiCall(endpoint: string, duration: number, success: boolean): void {
     const key = `api_${endpoint}_${success ? "success" : "error"}`
     this.incrementMetric(key)
     this.incrementMetric(`api_${endpoint}_duration`, duration)
@@ -26,15 +26,15 @@ export class ProductionMonitor {
   }
 
   // Track user interactions
-  trackUserAction(action: string, metadata?: any) {
+  trackUserAction(action: string, metadata?: any): void {
     this.incrementMetric(`user_${action}`)
-    if (metadata) {
+    if (metadata && process.env.NODE_ENV === "development") {
       console.log(`User action: ${action}`, metadata)
     }
   }
 
   // Track errors with context
-  trackError(error: Error | string, context?: any) {
+  trackError(error: Error | string, context?: any): void {
     const errorEntry = {
       timestamp: Date.now(),
       error: error instanceof Error ? error.message : error,
@@ -52,7 +52,7 @@ export class ProductionMonitor {
   }
 
   // Increment metric counter
-  private incrementMetric(key: string, value = 1) {
+  private incrementMetric(key: string, value = 1): void {
     const current = this.metrics.get(key) || 0
     this.metrics.set(key, current + value)
 
@@ -64,22 +64,27 @@ export class ProductionMonitor {
   }
 
   // Get current metrics
-  getMetrics() {
+  getMetrics(): Record<string, number> {
     return Object.fromEntries(this.metrics)
   }
 
   // Get recent errors
-  getRecentErrors(limit = 50) {
+  getRecentErrors(limit = 20): Array<{ timestamp: number; error: string; context?: any }> {
     return this.errors.slice(-limit)
   }
 
   // Health check
-  getHealthStatus() {
+  getHealthStatus(): {
+    status: string
+    errorCount: number
+    uptime: number
+    metrics: Record<string, number>
+  } {
     const recentErrors = this.errors.filter((e) => Date.now() - e.timestamp < 300000) // 5 minutes
     const errorRate = recentErrors.length
 
     return {
-      status: errorRate < 10 ? "healthy" : errorRate < 50 ? "degraded" : "unhealthy",
+      status: errorRate < 5 ? "healthy" : errorRate < 20 ? "degraded" : "unhealthy",
       errorCount: errorRate,
       uptime: Date.now(),
       metrics: this.getMetrics(),
@@ -88,7 +93,7 @@ export class ProductionMonitor {
 }
 
 // Global error handler
-export function setupGlobalErrorHandling() {
+export function setupGlobalErrorHandling(): void {
   if (typeof window !== "undefined") {
     const monitor = ProductionMonitor.getInstance()
 
