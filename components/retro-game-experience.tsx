@@ -301,8 +301,8 @@ export default function RetroGameExperience({ data, onRestart }: RetroGameExperi
 
   // Track game start
   useEffect(() => {
-    trackEvent("game_start", { manager_id: data.manager_id })
-  }, [data.manager_id, trackEvent])
+    trackEvent("game_start", { manager_id: data.managerId })
+  }, [data.managerId, trackEvent])
 
   if (showFinal) {
     return <RetroFinalCard data={data} onRestart={onRestart} onBack={() => setShowFinal(false)} />

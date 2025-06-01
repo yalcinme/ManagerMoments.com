@@ -1,4 +1,5 @@
 export interface FPLData {
+  managerId: string
   managerName: string
   teamName: string // Added team name field
   totalPoints: number
