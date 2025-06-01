@@ -1,53 +1,44 @@
 const CACHE_NAME = "fpl-wrapped-v2.0.0"
-const STATIC_CACHE = "fpl-static-v2.0.0"
+const STATIC_CACHE_NAME = "fpl-wrapped-static-v2.0.0"
 
-// Files to cache immediately
-const STATIC_FILES = ["/", "/manifest.json", "/favicon.ico", "/icon-192x192.png", "/icon-512x512.png"]
+// Cache static assets
+const STATIC_ASSETS = ["/", "/images/homepage-podium.png", "/favicon.ico"]
 
-// Install event - cache static files
+// Install event
 self.addEventListener("install", (event) => {
-  console.log("Service Worker installing...")
-
   event.waitUntil(
     caches
-      .open(STATIC_CACHE)
+      .open(STATIC_CACHE_NAME)
       .then((cache) => {
-        console.log("Caching static files")
-        return cache.addAll(STATIC_FILES)
+        return cache.addAll(STATIC_ASSETS)
       })
       .then(() => {
-        // Force activation of new service worker
         return self.skipWaiting()
       }),
   )
 })
 
-// Activate event - clean up old caches
+// Activate event
 self.addEventListener("activate", (event) => {
-  console.log("Service Worker activating...")
-
   event.waitUntil(
     caches
       .keys()
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            // Delete old caches
-            if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE) {
-              console.log("Deleting old cache:", cacheName)
+            if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE_NAME) {
               return caches.delete(cacheName)
             }
           }),
         )
       })
       .then(() => {
-        // Take control of all pages immediately
         return self.clients.claim()
       }),
   )
 })
 
-// Fetch event - implement caching strategy
+// Fetch event
 self.addEventListener("fetch", (event) => {
   const { request } = event
   const url = new URL(request.url)
@@ -57,63 +48,37 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  // Skip cross-origin requests
-  if (url.origin !== location.origin) {
-    return
-  }
-
-  // API requests - network first with cache fallback
+  // Skip API routes - always fetch fresh
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Don't cache error responses
-          if (!response.ok) {
-            return response
-          }
-
-          // Clone response for caching
-          const responseClone = response.clone()
-
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone)
-          })
-
-          return response
+      fetch(request).catch(() => {
+        return new Response(JSON.stringify({ error: "Network error. Please check your connection." }), {
+          status: 503,
+          headers: { "Content-Type": "application/json" },
         })
-        .catch(() => {
-          // Fallback to cache if network fails
-          return caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse
-            }
-
-            // Return offline page or error response
-            return new Response(JSON.stringify({ error: "Network unavailable" }), {
-              status: 503,
-              headers: { "Content-Type": "application/json" },
-            })
-          })
-        }),
+      }),
     )
     return
   }
 
-  // Static files - cache first with network fallback
-  if (STATIC_FILES.includes(url.pathname)) {
+  // Handle static assets
+  if (
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/images/") ||
+    url.pathname === "/favicon.ico"
+  ) {
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse
+      caches.match(request).then((response) => {
+        if (response) {
+          return response
         }
-
         return fetch(request).then((response) => {
-          const responseClone = response.clone()
-
-          caches.open(STATIC_CACHE).then((cache) => {
-            cache.put(request, responseClone)
-          })
-
+          if (response.status === 200) {
+            const responseClone = response.clone()
+            caches.open(STATIC_CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone)
+            })
+          }
           return response
         })
       }),
@@ -121,29 +86,38 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  // All other requests - network first
+  // Handle page requests - network first, then cache
   event.respondWith(
-    fetch(request).catch(() => {
-      // Fallback to cache
-      return caches.match(request)
-    }),
+    fetch(request)
+      .then((response) => {
+        if (response.status === 200) {
+          const responseClone = response.clone()
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone)
+          })
+        }
+        return response
+      })
+      .catch(() => {
+        return caches.match(request).then((response) => {
+          if (response) {
+            return response
+          }
+          // Return offline page or basic response
+          return new Response(
+            "<!DOCTYPE html><html><head><title>Offline</title></head><body><h1>You are offline</h1><p>Please check your internet connection.</p></body></html>",
+            {
+              headers: { "Content-Type": "text/html" },
+            },
+          )
+        })
+      }),
   )
 })
 
-// Message event - handle cache updates
+// Handle messages
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting()
-  }
-
-  if (event.data && event.data.type === "CLEAR_CACHE") {
-    caches
-      .keys()
-      .then((cacheNames) => {
-        return Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)))
-      })
-      .then(() => {
-        event.ports[0].postMessage({ success: true })
-      })
   }
 })

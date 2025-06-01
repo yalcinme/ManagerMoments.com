@@ -1,79 +1,69 @@
-interface CacheEntry<T> {
+interface CacheItem<T> {
   data: T
   timestamp: number
   ttl: number
-  version: string
 }
 
 interface CacheStats {
+  size: number
   hits: number
   misses: number
-  size: number
-  memoryUsage: number
+  hitRate: number
 }
 
-class OptimizedCacheManager {
-  private cache: Map<string, CacheEntry<any>> = new Map()
-  private defaultTTL: number
-  private maxSize: number
-  private version: string
-  private stats: CacheStats = { hits: 0, misses: 0, size: 0, memoryUsage: 0 }
-  private cleanupInterval: NodeJS.Timeout | null = null
-
-  constructor(defaultTTL = 300000, maxSize = 1000) {
-    // 5 minutes default, max 1000 entries
-    this.defaultTTL = defaultTTL
-    this.maxSize = maxSize
-    this.version = process.env.NEXT_PUBLIC_APP_VERSION || Date.now().toString()
-
-    // Start cleanup interval
-    this.startCleanup()
-  }
+class SimpleCacheManager {
+  private cache = new Map<string, CacheItem<any>>()
+  private maxSize = 100
+  private defaultTTL = 300000 // 5 minutes
+  private hits = 0
+  private misses = 0
 
   set<T>(key: string, data: T, ttl?: number): void {
-    // Evict old entries if at max size
+    // Clean expired items if cache is getting full
     if (this.cache.size >= this.maxSize) {
-      this.evictOldest()
+      this.cleanup()
     }
 
-    const entry: CacheEntry<T> = {
+    // If still full after cleanup, remove oldest item
+    if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value
+      if (firstKey) {
+        this.cache.delete(firstKey)
+      }
+    }
+
+    this.cache.set(key, {
       data,
       timestamp: Date.now(),
       ttl: ttl || this.defaultTTL,
-      version: this.version,
-    }
-
-    this.cache.set(key, entry)
-    this.updateStats()
+    })
   }
 
   get<T>(key: string): T | null {
-    const entry = this.cache.get(key)
+    const item = this.cache.get(key)
 
-    if (!entry) {
-      this.stats.misses++
+    if (!item) {
+      this.misses++
       return null
     }
 
-    const now = Date.now()
-
-    // Check if expired or version mismatch
-    if (now - entry.timestamp > entry.ttl || entry.version !== this.version) {
+    // Check if item has expired
+    if (Date.now() - item.timestamp > item.ttl) {
       this.cache.delete(key)
-      this.stats.misses++
+      this.misses++
       return null
     }
 
-    this.stats.hits++
-    return entry.data as T
+    this.hits++
+    return item.data as T
   }
 
   has(key: string): boolean {
-    const entry = this.cache.get(key)
-    if (!entry) return false
+    const item = this.cache.get(key)
+    if (!item) return false
 
-    const now = Date.now()
-    if (now - entry.timestamp > entry.ttl || entry.version !== this.version) {
+    // Check if expired
+    if (Date.now() - item.timestamp > item.ttl) {
       this.cache.delete(key)
       return false
     }
@@ -82,115 +72,66 @@ class OptimizedCacheManager {
   }
 
   delete(key: string): boolean {
-    const deleted = this.cache.delete(key)
-    if (deleted) this.updateStats()
-    return deleted
+    return this.cache.delete(key)
   }
 
   clear(): void {
     this.cache.clear()
-    this.stats = { hits: 0, misses: 0, size: 0, memoryUsage: 0 }
-  }
-
-  // Force clear cache when version changes
-  invalidateVersion(): void {
-    const oldVersion = this.version
-    this.version = Date.now().toString()
-
-    // Remove all entries with old version
-    for (const [key, entry] of this.cache.entries()) {
-      if (entry.version === oldVersion) {
-        this.cache.delete(key)
-      }
-    }
-
-    this.updateStats()
-  }
-
-  private evictOldest(): void {
-    let oldestKey: string | null = null
-    let oldestTime = Date.now()
-
-    for (const [key, entry] of this.cache.entries()) {
-      if (entry.timestamp < oldestTime) {
-        oldestTime = entry.timestamp
-        oldestKey = key
-      }
-    }
-
-    if (oldestKey) {
-      this.cache.delete(oldestKey)
-    }
-  }
-
-  private startCleanup(): void {
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup()
-    }, 60000) // Cleanup every minute
+    this.hits = 0
+    this.misses = 0
   }
 
   private cleanup(): void {
     const now = Date.now()
-    const keysToDelete: string[] = []
-
-    for (const [key, entry] of this.cache.entries()) {
-      if (now - entry.timestamp > entry.ttl || entry.version !== this.version) {
-        keysToDelete.push(key)
+    for (const [key, item] of this.cache.entries()) {
+      if (now - item.timestamp > item.ttl) {
+        this.cache.delete(key)
       }
     }
-
-    keysToDelete.forEach((key) => this.cache.delete(key))
-    this.updateStats()
-  }
-
-  private updateStats(): void {
-    this.stats.size = this.cache.size
-    this.stats.memoryUsage = this.estimateMemoryUsage()
-  }
-
-  private estimateMemoryUsage(): number {
-    // Rough estimation of memory usage
-    let size = 0
-    for (const [key, entry] of this.cache.entries()) {
-      size += key.length * 2 // UTF-16
-      size += JSON.stringify(entry).length * 2
-    }
-    return size
   }
 
   getStats(): CacheStats {
-    return { ...this.stats }
+    this.cleanup() // Clean before getting stats
+    const total = this.hits + this.misses
+    return {
+      size: this.cache.size,
+      hits: this.hits,
+      misses: this.misses,
+      hitRate: total > 0 ? (this.hits / total) * 100 : 0,
+    }
   }
 
   getHitRate(): number {
-    const total = this.stats.hits + this.stats.misses
-    return total > 0 ? this.stats.hits / total : 0
+    const total = this.hits + this.misses
+    return total > 0 ? (this.hits / total) * 100 : 0
   }
 
-  destroy(): void {
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval)
-    }
-    this.clear()
+  size(): number {
+    this.cleanup()
+    return this.cache.size
+  }
+
+  keys(): string[] {
+    this.cleanup()
+    return Array.from(this.cache.keys())
   }
 }
 
-// Singleton instance with proper cleanup
-let cacheInstance: OptimizedCacheManager | null = null
+// Export singleton instance
+let cacheInstance: SimpleCacheManager | null = null
 
-export function getCacheManager(): OptimizedCacheManager {
+export function getCacheManager(): SimpleCacheManager {
   if (!cacheInstance) {
-    cacheInstance = new OptimizedCacheManager()
-
-    // Cleanup on process exit
-    if (typeof process !== "undefined") {
-      process.on("exit", () => {
-        cacheInstance?.destroy()
-      })
-    }
+    cacheInstance = new SimpleCacheManager()
   }
   return cacheInstance
 }
 
-export const CacheManager = OptimizedCacheManager
-export default OptimizedCacheManager
+// Export the class as CacheManager (named export)
+export const CacheManager = SimpleCacheManager
+
+// Export as default
+export default SimpleCacheManager
+
+// Export types
+export type { CacheStats, CacheItem }

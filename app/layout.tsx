@@ -58,9 +58,6 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    google: process.env.GOOGLE_VERIFICATION,
-  },
 }
 
 export default function RootLayout({
@@ -79,58 +76,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
       </head>
-      <body className="antialiased">
-        {children}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                      
-                      // Check for updates
-                      registration.addEventListener('updatefound', function() {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', function() {
-                          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // New version available
-                            if (confirm('New version available! Reload to update?')) {
-                              newWorker.postMessage({ type: 'SKIP_WAITING' });
-                              window.location.reload();
-                            }
-                          }
-                        });
-                      });
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
-                });
-              }
-              
-              // Clear cache on version mismatch
-              const currentVersion = '2.0.0';
-              const storedVersion = localStorage.getItem('app-version');
-              
-              if (storedVersion && storedVersion !== currentVersion) {
-                if ('caches' in window) {
-                  caches.keys().then(function(names) {
-                    names.forEach(function(name) {
-                      caches.delete(name);
-                    });
-                  });
-                }
-                localStorage.clear();
-                sessionStorage.clear();
-              }
-              
-              localStorage.setItem('app-version', currentVersion);
-            `,
-          }}
-        />
-      </body>
+      <body className="antialiased">{children}</body>
     </html>
   )
 }
