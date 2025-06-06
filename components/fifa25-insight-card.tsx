@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Home, ArrowLeft, ArrowRight } from "lucide-react"
@@ -49,6 +51,11 @@ export function FIFA25InsightCard({
 }: FIFA25InsightCardProps) {
   const [mounted, setMounted] = useState(false)
   const [insightData, setInsightData] = useState<any>(null)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+
+  // Minimum swipe distance (in px)
+  const minSwipeDistance = 50
 
   useEffect(() => {
     setMounted(true)
@@ -60,6 +67,30 @@ export function FIFA25InsightCard({
       setInsightData(null)
     }
   }, [insight, data])
+
+  // Touch handlers for swipe navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    if (isLeftSwipe && currentIndex < totalSections - 1) {
+      onNext()
+    } else if (isRightSwipe && currentIndex > 1) {
+      onPrev()
+    }
+  }
 
   if (!mounted) {
     return (
@@ -393,28 +424,31 @@ export function FIFA25InsightCard({
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
       }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Enhanced dark overlay for better contrast */}
       <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-black/80" />
 
       {/* Navigation */}
-      <div className="absolute top-6 left-6 right-6 z-30 flex justify-between items-center">
+      <div className="absolute top-4 sm:top-6 left-4 sm:left-6 right-4 sm:right-6 z-30 flex justify-between items-center">
         <Button
           onClick={onHome}
-          className="h-12 w-12 p-0 bg-black/80 hover:bg-black/90 text-white border-2 border-white/30 rounded-full backdrop-blur-xl shadow-2xl transition-all duration-300 hover:scale-110"
+          className="h-10 w-10 sm:h-12 sm:w-12 p-0 bg-black/80 hover:bg-black/90 text-white border-2 border-white/30 rounded-full backdrop-blur-xl shadow-2xl transition-all duration-300 hover:scale-110"
         >
-          <Home className="w-6 h-6" />
+          <Home className="w-5 h-5 sm:w-6 sm:h-6" />
         </Button>
 
-        <div className="bg-black/80 backdrop-blur-xl px-4 py-2 rounded-full border-2 border-white/30 shadow-2xl">
-          <span className="text-white/90 text-sm font-semibold">
+        <div className="bg-black/80 backdrop-blur-xl px-3 py-1 sm:px-4 sm:py-2 rounded-full border-2 border-white/30 shadow-2xl">
+          <span className="text-white/90 text-xs sm:text-sm font-semibold">
             {currentIndex} / {totalSections - 1}
           </span>
         </div>
       </div>
 
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 sm:p-6">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -425,26 +459,26 @@ export function FIFA25InsightCard({
         </motion.div>
       </div>
 
-      {/* Navigation arrows */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-6">
+      {/* Navigation arrows - visible but with mobile-friendly hint */}
+      <div className="absolute bottom-6 sm:bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-4 sm:gap-6">
         <Button
           onClick={onPrev}
           disabled={currentIndex <= 1}
-          className="h-14 w-14 p-0 bg-black/80 hover:bg-black/90 text-white border-2 border-white/30 rounded-full backdrop-blur-xl disabled:opacity-50 shadow-2xl transition-all duration-300 hover:scale-110"
+          className="h-10 w-10 sm:h-14 sm:w-14 p-0 bg-black/80 hover:bg-black/90 text-white border-2 border-white/30 rounded-full backdrop-blur-xl disabled:opacity-50 shadow-2xl transition-all duration-300 hover:scale-110"
         >
-          <ArrowLeft className="w-7 h-7" />
+          <ArrowLeft className="w-5 h-5 sm:w-7 sm:h-7" />
         </Button>
 
-        <div className="px-6 py-3 bg-black/80 backdrop-blur-xl rounded-full border-2 border-white/30 shadow-2xl">
-          <span className="text-white text-sm font-semibold">Tap or use arrow keys</span>
+        <div className="px-4 py-2 bg-black/80 backdrop-blur-xl rounded-full border-2 border-white/30 shadow-2xl hidden sm:block">
+          <span className="text-white text-sm font-semibold">Swipe to navigate</span>
         </div>
 
         <Button
           onClick={onNext}
           disabled={currentIndex >= totalSections - 1}
-          className="h-14 w-14 p-0 bg-black/80 hover:bg-black/90 text-white border-2 border-white/30 rounded-full backdrop-blur-xl disabled:opacity-50 shadow-2xl transition-all duration-300 hover:scale-110"
+          className="h-10 w-10 sm:h-14 sm:w-14 p-0 bg-black/80 hover:bg-black/90 text-white border-2 border-white/30 rounded-full backdrop-blur-xl disabled:opacity-50 shadow-2xl transition-all duration-300 hover:scale-110"
         >
-          <ArrowRight className="w-7 h-7" />
+          <ArrowRight className="w-5 h-5 sm:w-7 sm:h-7" />
         </Button>
       </div>
     </div>
