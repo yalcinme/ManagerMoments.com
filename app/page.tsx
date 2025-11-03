@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Wrench } from "lucide-react"
+import { Sparkles, Heart, TrendingUp } from "lucide-react"
 
 export default function Home() {
   return (
@@ -36,26 +36,48 @@ export default function Home() {
           </span>
         </motion.h1>
 
-        {/* Maintenance Message - Improved responsive padding and spacing */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.8 }}
-          className="p-6 sm:p-8 md:p-10 lg:p-12 bg-gradient-to-br from-amber-500/30 to-orange-600/30 border-2 border-amber-400/50 rounded-xl sm:rounded-2xl backdrop-blur-md shadow-2xl"
+          className="space-y-4 sm:space-y-6"
         >
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <Wrench className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-amber-300 animate-pulse" />
-            <h2 className="text-amber-100 font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl text-center sm:text-left">
-              Under Maintenance
-            </h2>
+          {/* Celebration Banner */}
+          <div className="p-4 sm:p-6 md:p-8 bg-gradient-to-r from-purple-600/40 via-pink-600/40 to-purple-600/40 border-2 border-purple-400/60 rounded-xl sm:rounded-2xl backdrop-blur-md shadow-2xl">
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-300 animate-pulse" />
+              <h2 className="text-yellow-300 font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl">
+                30,000+ FPL Fans!
+              </h2>
+              <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-300 animate-pulse" />
+            </div>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-pink-300 fill-pink-300" />
+              <p className="text-pink-100 font-semibold text-base sm:text-lg md:text-xl lg:text-2xl">
+                Thank You for Your Amazing Support!
+              </p>
+            </div>
+            <p className="text-purple-100/90 text-sm sm:text-base md:text-lg leading-relaxed text-pretty">
+              Your FPL Wrapped experience has been visited by over 30,000 passionate FPL managers. We're blown away by
+              your enthusiasm!
+            </p>
           </div>
 
-          <p className="text-amber-100/90 text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed mb-4 sm:mb-6 text-pretty">
-            We're optimizing your experience and getting ready for the mid-season features.
-          </p>
-          <p className="text-amber-200/80 text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-pretty">
-            Thank you for your patience. We'll be back soon with an even better FPL experience!
-          </p>
+          {/* Maintenance Info */}
+          <div className="p-6 sm:p-8 md:p-10 bg-gradient-to-br from-blue-600/30 to-cyan-600/30 border-2 border-blue-400/50 rounded-xl sm:rounded-2xl backdrop-blur-md shadow-2xl">
+            <div className="flex items-center justify-center gap-3 mb-4 sm:mb-5">
+              <TrendingUp className="w-7 h-7 sm:w-9 sm:h-9 text-cyan-300" />
+              <h3 className="text-cyan-100 font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl">
+                Leveling Up Your Experience
+              </h3>
+            </div>
+            <p className="text-blue-100/90 text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed mb-3 sm:mb-4 text-pretty">
+              We're currently optimizing the platform and preparing exciting new mid-season features just for you.
+            </p>
+            <p className="text-cyan-200 font-medium text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-pretty">
+              Thank you for your patience. We'll be back soon with an even better FPL experience!
+            </p>
+          </div>
         </motion.div>
       </motion.div>
     </div>
