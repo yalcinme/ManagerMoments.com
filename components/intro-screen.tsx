@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Play, Loader2, Info, AlertCircle } from "lucide-react"
+import { Play, Loader2, Info, AlertCircle, Wrench } from "lucide-react"
 
 interface IntroScreenProps {
   onStart: (id: string) => void
@@ -15,10 +15,11 @@ interface IntroScreenProps {
 
 export function IntroScreen({ onStart, error, loading, managerId, setManagerId }: IntroScreenProps) {
   const [inputValue, setInputValue] = useState("")
+  const isMaintenanceMode = error?.includes("403") || error?.includes("Unable to fetch")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (inputValue.trim()) {
+    if (inputValue.trim() && !isMaintenanceMode) {
       onStart(inputValue.trim())
     }
   }
@@ -35,6 +36,15 @@ export function IntroScreen({ onStart, error, loading, managerId, setManagerId }
     >
       {/* Dark overlay for better text readability */}
       <div className="absolute inset-0 bg-black/60" />
+
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
+        className="absolute top-4 sm:top-6 lg:top-8 left-1/2 -translate-x-1/2 z-20 w-[90%] max-w-3xl"
+      >
+        
+      </motion.div>
 
       {/* Content */}
       <motion.div
@@ -65,48 +75,69 @@ export function IntroScreen({ onStart, error, loading, managerId, setManagerId }
           Relive FPL 2024/25 Season
         </motion.p>
 
-        {/* Form */}
-        <motion.form
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.8 }}
-          onSubmit={handleSubmit}
-          className="space-y-6 sm:space-y-8 lg:space-y-12 max-w-2xl mx-auto"
-        >
-          <div className="text-center">
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Enter your FPL Manager ID"
-              className="w-full px-6 py-4 sm:px-8 sm:py-6 lg:px-12 lg:py-8 text-lg sm:text-xl lg:text-2xl xl:text-3xl rounded-xl sm:rounded-2xl lg:rounded-3xl border-2 border-white/20 bg-white/10 backdrop-blur-md text-white placeholder-white/70 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/50 transition-all duration-300 text-center font-medium"
-              disabled={loading}
-            />
-          </div>
+        {!isMaintenanceMode && (
+          <motion.form
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.8 }}
+            onSubmit={handleSubmit}
+            className="space-y-6 sm:space-y-8 lg:space-y-12 max-w-2xl mx-auto"
+          >
+            <div className="text-center">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Enter your FPL Manager ID"
+                className="w-full px-6 py-4 sm:px-8 sm:py-6 lg:px-12 lg:py-8 text-lg sm:text-xl lg:text-2xl xl:text-3xl rounded-xl sm:rounded-2xl lg:rounded-3xl border-2 border-white/20 bg-white/10 backdrop-blur-md text-white placeholder-white/70 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/50 transition-all duration-300 text-center font-medium"
+                disabled={loading}
+              />
+            </div>
 
-          <div className="text-center space-y-4 sm:space-y-6">
-            <button
-              type="submit"
-              disabled={loading || !inputValue.trim()}
-              className="inline-flex items-center gap-3 sm:gap-4 lg:gap-6 px-8 py-4 sm:px-12 sm:py-6 lg:px-16 lg:py-8 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold text-lg sm:text-xl lg:text-2xl xl:text-3xl rounded-xl sm:rounded-2xl lg:rounded-3xl hover:from-yellow-400 hover:to-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-2xl hover:shadow-yellow-500/25 hover:scale-105"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <Play className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
-                  Start Your Journey
-                </>
-              )}
-            </button>
-          </div>
-        </motion.form>
+            <div className="text-center space-y-4 sm:space-y-6">
+              <button
+                type="submit"
+                disabled={loading || !inputValue.trim()}
+                className="inline-flex items-center gap-3 sm:gap-4 lg:gap-6 px-8 py-4 sm:px-12 sm:py-6 lg:px-16 lg:py-8 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold text-lg sm:text-xl lg:text-2xl xl:text-3xl rounded-xl sm:rounded-2xl lg:rounded-3xl hover:from-yellow-400 hover:to-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-2xl hover:shadow-yellow-500/25 hover:scale-105"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
+                    Start Your Journey
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.form>
+        )}
 
-        {/* Error Message */}
-        {error && (
+        {isMaintenanceMode && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 sm:mt-8 lg:mt-12 p-6 sm:p-8 lg:p-12 bg-gradient-to-br from-amber-500/20 to-orange-600/20 border-2 border-amber-400/40 rounded-xl sm:rounded-2xl lg:rounded-3xl backdrop-blur-md text-center max-w-3xl mx-auto shadow-2xl"
+          >
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <Wrench className="w-8 h-8 sm:w-10 sm:h-10 text-amber-300 animate-pulse" />
+              <h3 className="text-amber-100 font-bold text-xl sm:text-2xl lg:text-3xl">Under Maintenance</h3>
+            </div>
+            <p className="text-amber-100/90 text-base sm:text-lg lg:text-xl leading-relaxed mb-4">
+              We're currently enhancing your FPL experience and preparing exciting new features for the mid-season
+              period.
+            </p>
+            <p className="text-amber-200/80 text-sm sm:text-base lg:text-lg">
+              Thank you for your patience. We'll be back soon with an even better experience!
+            </p>
+          </motion.div>
+        )}
+
+        {/* Show technical error only if not in maintenance mode */}
+        {error && !isMaintenanceMode && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -120,23 +151,25 @@ export function IntroScreen({ onStart, error, loading, managerId, setManagerId }
           </motion.div>
         )}
 
-        {/* Instructions */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.8 }}
-          className="mt-8 sm:mt-12 lg:mt-16 text-center max-w-3xl mx-auto"
-        >
-          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <Info className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-300" />
-            <p className="text-white/80 text-sm sm:text-base lg:text-lg xl:text-xl font-medium drop-shadow-lg">
-              How to find your Manager ID
+        {/* Instructions - only show when not in maintenance mode */}
+        {!isMaintenanceMode && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, duration: 0.8 }}
+            className="mt-8 sm:mt-12 lg:mt-16 text-center max-w-3xl mx-auto"
+          >
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <Info className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-300" />
+              <p className="text-white/80 text-sm sm:text-base lg:text-lg xl:text-xl font-medium drop-shadow-lg">
+                How to find your Manager ID
+              </p>
+            </div>
+            <p className="text-white/60 text-xs sm:text-sm lg:text-base xl:text-lg drop-shadow-lg leading-relaxed">
+              Visit the FPL website → Points → Gameweek History. Your ID is in the URL after "/entry/"
             </p>
-          </div>
-          <p className="text-white/60 text-xs sm:text-sm lg:text-base xl:text-lg drop-shadow-lg leading-relaxed">
-            Visit the FPL website → Points → Gameweek History. Your ID is in the URL after "/entry/"
-          </p>
-        </motion.div>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   )

@@ -202,7 +202,7 @@ export class FPLApiClient {
   }
 
   private async makeRequest(url: string): Promise<any> {
-    const maxRetries = 3
+    const maxRetries = 2 // Reduced retries to fail faster in maintenance mode
     let lastError: Error | null = null
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -210,26 +210,43 @@ export class FPLApiClient {
         console.log(`🌐 Making request (attempt ${attempt}/${maxRetries}): ${url}`)
 
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 8000) // Reduced timeout to 8 seconds
 
         const response = await fetch(url, {
           headers: {
-            "User-Agent": "Mozilla/5.0 (compatible; FPL-DataProcessor/1.0)",
-            Accept: "application/json",
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            Accept: "application/json, text/plain, */*",
+            "Accept-Language": "en-GB,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            Referer: "https://fantasy.premierleague.com/",
+            Origin: "https://fantasy.premierleague.com",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
           },
           signal: controller.signal,
+          cache: "no-store", // Disable caching to ensure fresh requests
         })
 
         clearTimeout(timeoutId)
 
         if (!response.ok) {
+          if (response.status === 403) {
+            throw new Error("FPL API is currently unavailable. Please try again later.")
+          }
           if (response.status === 404) {
             throw new Error("Manager not found")
           }
           if (response.status === 429) {
             throw new Error("Rate limited")
           }
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+          const bodyText = await response.text().catch(() => "")
+          throw new Error(
+            `HTTP ${response.status}: ${response.statusText}${bodyText ? ` - ${bodyText.substring(0, 100)}` : ""}`,
+          )
         }
 
         const data = await response.json()
@@ -239,15 +256,19 @@ export class FPLApiClient {
         lastError = error as Error
         console.warn(`⚠️ Request failed (attempt ${attempt}/${maxRetries}):`, error)
 
+        if (error instanceof Error && error.message.includes("403")) {
+          throw error
+        }
+
         if (attempt < maxRetries) {
-          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000) // Exponential backoff
+          const delay = 1500 * attempt // Shorter delays: 1.5s, 3s
           console.log(`⏳ Retrying in ${delay}ms...`)
           await new Promise((resolve) => setTimeout(resolve, delay))
         }
       }
     }
 
-    throw lastError || new Error("Request failed after all retries")
+    throw lastError || new Error("Unable to fetch FPL data. Please try again later.")
   }
 
   getPlayerById(playerId: number): any {

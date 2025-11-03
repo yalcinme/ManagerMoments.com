@@ -71,6 +71,9 @@ export default function Home() {
         } catch (parseError) {
           console.error("Failed to parse error response:", parseError)
         }
+        if (response.status === 403) {
+          errorMessage = "Unable to fetch FPL data. The service is currently unavailable."
+        }
         throw new Error(errorMessage)
       }
 
@@ -125,7 +128,9 @@ export default function Home() {
       let errorMessage = "An unexpected error occurred"
 
       if (err instanceof Error) {
-        if (err.message.includes("404")) {
+        if (err.message.includes("403") || err.message.includes("unavailable")) {
+          errorMessage = "Unable to fetch FPL data. Please try again later."
+        } else if (err.message.includes("404")) {
           errorMessage = "Manager not found. Please check your FPL Manager ID."
         } else if (err.message.includes("429")) {
           errorMessage = "Too many requests. Please wait a moment and try again."
